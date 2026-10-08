@@ -1,30 +1,41 @@
 # --- Stage 1: Build JAR ---
 FROM maven:3.9.9-eclipse-temurin-21-alpine AS builder
+
 WORKDIR /app
 
-# Cache dependencies
+# Copy Maven files first for dependency caching
 COPY pom.xml .
 COPY .mvn .mvn
 COPY mvnw .
+
+# Fix Linux execute permission for Maven Wrapper
+RUN chmod +x mvnw
+
+# Download dependencies
 RUN ./mvnw dependency:go-offline -B
 
-# Copy source and build
+# Copy source code
 COPY src src
+
+# Build Spring Boot JAR
 RUN ./mvnw clean package -DskipTests
+
 
 # --- Stage 2: Runtime Image ---
 FROM eclipse-temurin:21-jre-alpine
+
 WORKDIR /app
 
-# Create a non-root system user for security
+# Create non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
 USER appuser
 
-# Copy jar from builder stage
+# Copy generated JAR
 COPY --from=builder /app/target/*.jar app.jar
 
-# Expose default Spring port
+# Documentation/default port
 EXPOSE 8080
 
-# Run with container memory optimizations
+# Start application
 ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
