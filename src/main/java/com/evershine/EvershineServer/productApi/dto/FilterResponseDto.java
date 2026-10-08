@@ -1,0 +1,14 @@
+package com.evershine.EvershineServer.productApi.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.UUID;
+
+@Getter @Setter @AllArgsConstructor
+public class FilterResponseDto {
+    private UUID id;
+    private String name;
+    private boolean active;
+}
