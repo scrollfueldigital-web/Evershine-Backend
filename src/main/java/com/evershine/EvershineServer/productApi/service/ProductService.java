@@ -51,11 +51,17 @@ public class ProductService {
     @Transactional
     public ProductLightResponseDto updateProductById(UUID id, ProductRequestDto dto){
 
-        if(productRepository.existsBySlug(dto.getSlug()))
-            throw new DuplicateFilterException("Slug already exists with name: "+dto.getSlug());
-
         Product oldProduct = productRepository.findById(id)
                 .orElseThrow(()->new ProductNotFoundException("Product does not exists with id: "+id));
+
+        if(
+                oldProduct!=null
+                && dto.getSlug()!=null
+                && !oldProduct.getSlug().equals(dto.getSlug())
+                && productRepository.existsBySlug(dto.getSlug())
+        ){
+            throw new DuplicateFilterException("Product slug already exist with name: "+dto.getSlug());
+        }
 
         oldProduct = addProductInfo(oldProduct,dto);
 
@@ -73,6 +79,13 @@ public class ProductService {
 
         oldProduct = productRepository.save(oldProduct);
         return toProductResponseDto(oldProduct);
+    }
+
+    @Transactional(readOnly = true)
+    public ProductLightResponseDto getProductBySlug(String slug){
+        Product product = productRepository.findBySlug(slug)
+                .orElseThrow(()->new ProductNotFoundException("Product does not exist with slug: "+slug));
+        return toProductResponseDto(product);
     }
 
     @Transactional(readOnly = true)
@@ -109,7 +122,8 @@ public class ProductService {
     public void deleteProductById(UUID id){
         if(productRepository.existsById(id))
             productRepository.deleteById(id);
-        throw new ProductNotFoundException("Product does not exists with id: "+id);
+        else
+            throw new ProductNotFoundException("Product does not exists with id: "+id);
     }
 
     private ProductMetaDataDto toProductMetaDtaDto(Product p) {
@@ -119,18 +133,20 @@ public class ProductService {
         dto.setId(p.getId());
         dto.setImageUrl(p.getImageUrl());
         dto.setTitle(p.getTitle());
+        dto.setSlug(p.getSlug());
 
         // JSON attribute → DTO
-        dto.setAttributes(
-                p.getAttributes().stream()
-                        .map(a -> new AttributeDto(
-                                a.getLabel(),
-                                a.getUnit(),
-                                a.getMin() !=null?a.getMin():0,
-                                a.getMax() !=null? a.getMax():0
-                        ))
-                        .toList()
-        );
+        if(p.getAttributes()!= null)
+            dto.setAttributes(
+                    p.getAttributes().stream()
+                            .map(a -> new AttributeDto(
+                                    a.getLabel(),
+                                    a.getUnit(),
+                                    a.getMin() !=null?a.getMin():null,
+                                    a.getMax() !=null? a.getMax():null
+                            ))
+                            .toList()
+            );
         if(p.getCategory()!= null)
             dto.setCategoryId(p.getCategory().getId());
         if((p.getCategoryType()!= null))
@@ -155,12 +171,17 @@ public class ProductService {
 
         dto.setId(product.getId());
         dto.setTitle(product.getTitle());
+        dto.setSlug(product.getSlug());
         dto.setImageUrl(product.getImageUrl());
         dto.setProductStatus(product.getProductStatus());
 
-        dto.setAttributeDtoList(getAttributeDtoList(product));
+        if(product.getAttributes()!=null)
+            dto.setFullAttributeResponseDtos(getAttributeDtoList(product));
+
         dto.setOverviewHtml(product.getOverviewHtml());
-        dto.setPropertyRequestDtoList(getPropertyRequestDto(product));
+
+        if(product.getPropertyTables()!= null)
+            dto.setPropertyRequestDtoList(getPropertyRequestDto(product));
 
         // Safely extract IDs using null checks
         if (product.getCategory() != null) dto.setCategoryId(product.getCategory().getId());
@@ -187,17 +208,18 @@ public class ProductService {
         return propertyRequestDtoList;
     }
 
-    private List<AttributeDto> getAttributeDtoList(Product product) {
-        List<AttributeDto> attributeDtoList = new ArrayList<>();
+    private List<FullAttributeResponseDto> getAttributeDtoList(Product product) {
+        List<FullAttributeResponseDto> attributeDtoList = new ArrayList<>();
 
         for(Attribute attribute : product.getAttributes()){
-            AttributeDto dto = new AttributeDto();
+            FullAttributeResponseDto dto = new FullAttributeResponseDto();
             dto.setLabel(attribute.getLabel());
             dto.setUnit(attribute.getUnit());
-            if(attribute.getMax() != null && attribute.getMax()!=null){
+            if(attribute.getMax() != null && attribute.getMin()!=null){
                 dto.setMin(attribute.getMin());
                 dto.setMax(attribute.getMax());
             }
+            dto.setValues(attribute.getValues());
             attributeDtoList.add(dto);
         }
         return attributeDtoList;

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, UUID> {
@@ -44,7 +45,21 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     })
     List<Product> findAll();
 
+    @Query("""
+    SELECT DISTINCT p
+    FROM Product p
+    LEFT JOIN FETCH p.category
+    LEFT JOIN FETCH p.categoryType
+    LEFT JOIN FETCH p.categoryVariant
+    LEFT JOIN FETCH p.brand
+    LEFT JOIN FETCH p.subBrand
+    LEFT JOIN FETCH p.grade
+    LEFT JOIN FETCH p.subGrade
+    WHERE p.productStatus = :status
+""")
     List<Product> findByProductStatus(ProductStatus status);
+
+    Optional<Product> findBySlug(String slug);
 
     boolean existsBySlug(String slug);
 }

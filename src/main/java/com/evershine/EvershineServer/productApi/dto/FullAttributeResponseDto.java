@@ -1,18 +1,17 @@
 package com.evershine.EvershineServer.productApi.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 import java.util.List;
 
-@Setter @Getter @RequiredArgsConstructor
-public class Attribute {
+@Getter @Setter @AllArgsConstructor @NoArgsConstructor
+public class FullAttributeResponseDto {
     private String label;
     private String unit;
-    private List<String> values;
-    private Boolean customInput;
     private String min;
     private String max;
+    private List<String> values;
 }

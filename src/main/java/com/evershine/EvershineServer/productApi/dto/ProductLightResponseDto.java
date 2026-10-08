@@ -13,9 +13,10 @@ public class ProductLightResponseDto {
     private UUID id;
     private String title;
     private String imageUrl;
+    private String slug;
     private ProductStatus productStatus;
 
-    private List<AttributeDto> attributeDtoList;
+    private List<FullAttributeResponseDto> fullAttributeResponseDtos;
     private String overviewHtml;
     private List<PropertyRequestDto> propertyRequestDtoList;
     private UUID categoryId;
@@ -23,7 +24,7 @@ public class ProductLightResponseDto {
     private UUID categoryVariantId;
 
     private UUID brandId;
-    private String brandName;
+//    private String brandName;
     private UUID subBrandId;
     private UUID gradeId;
     private UUID subGradeId;

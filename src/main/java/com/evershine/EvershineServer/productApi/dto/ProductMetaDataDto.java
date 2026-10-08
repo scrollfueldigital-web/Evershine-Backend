@@ -16,6 +16,7 @@ public class ProductMetaDataDto {
     private UUID id;
     private String imageUrl;
     private String title;
+    private String slug;
 
     private List<AttributeDto> attributes;
 

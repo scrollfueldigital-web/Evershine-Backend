@@ -27,7 +27,6 @@ import java.util.UUID;
                     @Index(columnList = "category_type_id")
                 // may need index over category
         })
-@Data @ToString
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

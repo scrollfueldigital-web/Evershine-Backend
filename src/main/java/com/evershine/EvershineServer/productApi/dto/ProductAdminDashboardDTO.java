@@ -4,7 +4,7 @@ import lombok.*;
 
 import java.util.List;
 
-@Getter @Setter @AllArgsConstructor @NoArgsConstructor @ToString
+@Getter @Setter @AllArgsConstructor @NoArgsConstructor
 public class ProductAdminDashboardDTO {
 
     long totalProducts;

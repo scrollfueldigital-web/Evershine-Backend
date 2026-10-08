@@ -8,6 +8,6 @@ import java.util.List;
 public class AttributeDto {
     private String label;
     private String unit;
-    private double min;
-    private double max;
+    private String min;
+    private String max;
 }

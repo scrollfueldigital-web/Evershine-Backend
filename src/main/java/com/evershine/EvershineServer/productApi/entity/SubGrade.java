@@ -9,7 +9,7 @@ import lombok.ToString;
 
 import java.util.UUID;
 
-@Entity @Setter @Getter @RequiredArgsConstructor @ToString
+@Entity @Setter @Getter @RequiredArgsConstructor
 public class SubGrade {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID) private UUID id;
