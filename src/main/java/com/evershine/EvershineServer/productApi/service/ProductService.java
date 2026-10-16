@@ -134,6 +134,7 @@ public class ProductService {
         dto.setImageUrl(p.getImageUrl());
         dto.setTitle(p.getTitle());
         dto.setSlug(p.getSlug());
+        dto.setProductStatus(p.getProductStatus());
 
         // JSON attribute → DTO
         if(p.getAttributes()!= null)

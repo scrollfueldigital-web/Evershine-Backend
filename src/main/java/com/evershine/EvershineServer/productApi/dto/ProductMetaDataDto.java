@@ -17,6 +17,7 @@ public class ProductMetaDataDto {
     private String imageUrl;
     private String title;
     private String slug;
+    private ProductStatus productStatus;
 
     private List<AttributeDto> attributes;
 
