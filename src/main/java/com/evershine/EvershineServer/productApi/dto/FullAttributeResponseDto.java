@@ -14,4 +14,5 @@ public class FullAttributeResponseDto {
     private String min;
     private String max;
     private List<String> values;
+    private Boolean customInput;
 }

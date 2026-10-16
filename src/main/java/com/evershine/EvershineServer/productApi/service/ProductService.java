@@ -220,6 +220,7 @@ public class ProductService {
                 dto.setMax(attribute.getMax());
             }
             dto.setValues(attribute.getValues());
+            dto.setCustomInput(attribute.getCustomInput());
             attributeDtoList.add(dto);
         }
         return attributeDtoList;
@@ -250,16 +251,17 @@ public class ProductService {
     private Product addProductInfo(Product product,ProductRequestDto productRequestDto){
         if(productRequestDto.getProductStatus()!= null)
             product.setProductStatus(productRequestDto.getProductStatus());
+
         product.setImageUrl(productRequestDto.getImageUrl());
         product.setOverviewHtml(productRequestDto.getOverviewHtml());
         product.setPropertyTables(productRequestDto.getPropertyTables());
         product.setSlug(productRequestDto.getSlug());
         product.setTitle(productRequestDto.getTitle());
+
         if(productRequestDto.getProductStatus()!=null)
             product.setProductStatus(productRequestDto.getProductStatus());
 
         return addAttributes(product, productRequestDto);
-
     }
 
     private Product addAttributes(Product product, ProductRequestDto productRequestDto) {
