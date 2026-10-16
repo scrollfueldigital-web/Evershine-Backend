@@ -1,4 +1,4 @@
-package com.evershine.EvershineServer.productApi.ProductApiExceptionHandler;
+package com.evershine.EvershineServer.projectExceptionHandler;
 
 public class ProductNotFoundException extends RuntimeException {
     public ProductNotFoundException(String message) {

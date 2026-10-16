@@ -1,7 +1,7 @@
 package com.evershine.EvershineServer.productApi.service;
 
-import com.evershine.EvershineServer.productApi.ProductApiExceptionHandler.DuplicateFilterException;
-import com.evershine.EvershineServer.productApi.ProductApiExceptionHandler.ProductNotFoundException;
+import com.evershine.EvershineServer.projectExceptionHandler.DuplicateFilterException;
+import com.evershine.EvershineServer.projectExceptionHandler.ProductNotFoundException;
 import com.evershine.EvershineServer.productApi.dto.*;
 import com.evershine.EvershineServer.productApi.entity.Product;
 import com.evershine.EvershineServer.productApi.repository.ProductRepository;
@@ -248,12 +248,15 @@ public class ProductService {
     }
 
     private Product addProductInfo(Product product,ProductRequestDto productRequestDto){
-        product.setProductStatus(ProductStatus.ACTIVE);
+        if(productRequestDto.getProductStatus()!= null)
+            product.setProductStatus(productRequestDto.getProductStatus());
         product.setImageUrl(productRequestDto.getImageUrl());
         product.setOverviewHtml(productRequestDto.getOverviewHtml());
         product.setPropertyTables(productRequestDto.getPropertyTables());
         product.setSlug(productRequestDto.getSlug());
         product.setTitle(productRequestDto.getTitle());
+        if(productRequestDto.getProductStatus()!=null)
+            product.setProductStatus(productRequestDto.getProductStatus());
 
         return addAttributes(product, productRequestDto);
 

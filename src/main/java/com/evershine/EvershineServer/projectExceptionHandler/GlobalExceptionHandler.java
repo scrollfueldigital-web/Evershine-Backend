@@ -1,4 +1,4 @@
-package com.evershine.EvershineServer.productApi.ProductApiExceptionHandler;
+package com.evershine.EvershineServer.projectExceptionHandler;
 
 
 import com.evershine.EvershineServer.productApi.dto.ErrorResponseDto;

@@ -1,7 +1,7 @@
 package com.evershine.EvershineServer.productApi.service;
 
-import com.evershine.EvershineServer.productApi.ProductApiExceptionHandler.DuplicateFilterException;
-import com.evershine.EvershineServer.productApi.ProductApiExceptionHandler.FilterOptionNotFoundException;
+import com.evershine.EvershineServer.projectExceptionHandler.DuplicateFilterException;
+import com.evershine.EvershineServer.projectExceptionHandler.FilterOptionNotFoundException;
 import com.evershine.EvershineServer.productApi.dto.FilterResponseDto;
 import com.evershine.EvershineServer.productApi.dto.ProductStatus;
 import com.evershine.EvershineServer.productApi.entity.Brand;

@@ -1,6 +1,6 @@
 package com.evershine.EvershineServer.productApi.service;
 
-import com.evershine.EvershineServer.productApi.ProductApiExceptionHandler.FilterOptionNotFoundException;
+import com.evershine.EvershineServer.projectExceptionHandler.FilterOptionNotFoundException;
 import com.evershine.EvershineServer.productApi.dto.AllAvailableFilterDto;
 import com.evershine.EvershineServer.productApi.dto.CategoryDto;
 import com.evershine.EvershineServer.productApi.dto.CategoryTypeDto;
