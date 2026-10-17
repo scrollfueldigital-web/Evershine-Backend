@@ -1,5 +1,6 @@
 package com.evershine.EvershineServer.productApi.service;
 
+import com.evershine.EvershineServer.productApi.repository.ProductRepository;
 import com.evershine.EvershineServer.projectExceptionHandler.DuplicateFilterException;
 import com.evershine.EvershineServer.projectExceptionHandler.FilterOptionNotFoundException;
 import com.evershine.EvershineServer.productApi.dto.CatalogueRequestDto;
@@ -21,7 +22,7 @@ public class CategoryVariantService {
 
     private final CategoryVariantRepository categoryVariantRepository;
     private final CategoryTypeRepository categoryTypeRepository;
-
+    private final ProductRepository productRepository;
 
     @Transactional
     public CatalogueResponseDto addCategoryVariant(
@@ -116,6 +117,14 @@ public class CategoryVariantService {
         return toCatalogueResponseDto(variant);
     }
 
+    @Transactional
+    public String deleteByCategoryVariantId(UUID id){
+        categoryVariantRepository.findById(id)
+                .orElseThrow(()->new FilterOptionNotFoundException("Category variant does not exist with id: "+id));
+        long numberOfProducts = productRepository.deleteByCategoryVariant_Id(id);
+        categoryVariantRepository.deleteById(id);
+        return "Category variants deleted successfully! "+numberOfProducts+" products are removed completely.";
+    }
 
     private CategoryVariant toCategoryVariant(
             CategoryType categoryType,

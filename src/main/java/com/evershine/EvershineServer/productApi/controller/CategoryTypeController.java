@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -113,5 +114,15 @@ public class CategoryTypeController {
     public ResponseEntity<CatalogueResponseDto> updateCategoryById(@Valid @RequestBody CatalogueRequestDto catalogueRequestDto, @PathVariable UUID id) {
         return ResponseEntity.ok(
                 categoryTypeService.updateCategoryTypeById(id,catalogueRequestDto));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete an existing CategoryType and associated products hard delete")
+    public ResponseEntity<String> deleteById(
+            @Parameter(description = "The unique UUID of the CategoryType", required = true)
+            @PathVariable UUID id){
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(
+                categoryTypeService.deleteCategoryType(id)
+        );
     }
 }

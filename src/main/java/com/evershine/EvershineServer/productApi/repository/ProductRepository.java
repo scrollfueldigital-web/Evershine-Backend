@@ -18,6 +18,12 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     List<Product>findByGradeId(UUID id);
     List<Product>findBySubGradeId(UUID id);
 
+    long deleteByCategory_Id(UUID categoryId);
+
+    long deleteByCategoryType_Id(UUID categoryTypeId);
+
+    long deleteByCategoryVariant_Id(UUID categoryVariantId);
+
     long countByProductStatus(ProductStatus status);
 
     // find full products

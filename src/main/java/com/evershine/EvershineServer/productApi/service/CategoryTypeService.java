@@ -1,5 +1,8 @@
 package com.evershine.EvershineServer.productApi.service;
 
+import com.evershine.EvershineServer.productApi.entity.CategoryVariant;
+import com.evershine.EvershineServer.productApi.repository.CategoryVariantRepository;
+import com.evershine.EvershineServer.productApi.repository.ProductRepository;
 import com.evershine.EvershineServer.projectExceptionHandler.DuplicateFilterException;
 import com.evershine.EvershineServer.projectExceptionHandler.FilterOptionNotFoundException;
 import com.evershine.EvershineServer.productApi.dto.CatalogueRequestDto;
@@ -14,12 +17,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Service @RequiredArgsConstructor
 public class CategoryTypeService {
 
     private final CategoryTypeRepository categoryTypeRepository;
     private final CategoryRepository categoryRepository;
+    private final CategoryVariantRepository categoryVariantRepository;
+    private final ProductRepository productRepository;
 
     @Transactional
     public CatalogueResponseDto addCategoryType(UUID parentId,CatalogueRequestDto dto){
@@ -71,6 +77,30 @@ public class CategoryTypeService {
         type = categoryTypeRepository.save(type);
 
         return toCatalogueResponseDto(type);
+    }
+
+    @Transactional
+    public String deleteCategoryType(UUID id){
+        //checking if category type exists?
+        categoryTypeRepository.findById(id)
+                .orElseThrow(()->new FilterOptionNotFoundException("Category Type does not exist with id: "+id));
+
+        // deleting associated product first to avoid foreign key constraints
+        AtomicLong numberOfProducts = new AtomicLong(productRepository.deleteByCategoryType_Id(id));
+
+        // delete associated variants
+        List<CategoryVariant> categoryVariants = categoryVariantRepository.findByCategoryType_Id(id);
+
+        // delete each variant associated products
+        categoryVariants.forEach(
+                variant->{
+                    numberOfProducts.addAndGet(productRepository.deleteByCategoryVariant_Id(variant.getId()));
+                    categoryVariantRepository.deleteById(variant.getId());
+                }
+        );
+
+        categoryTypeRepository.deleteById(id);
+        return "Category Type deleted successfully! "+numberOfProducts+" products are removed completely";
     }
 
     private CategoryType toCategoryType(Category category, CatalogueRequestDto dto) {

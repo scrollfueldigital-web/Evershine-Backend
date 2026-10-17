@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -239,6 +240,16 @@ public class CategoryVariantController {
                         id,
                         catalogueRequestDto
                 )
+        );
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete an existing CategoryVariant and associated products hard delete")
+    public ResponseEntity<String> deleteById(
+            @Parameter(description = "The unique UUID of the CategoryVariant", required = true)
+            @PathVariable UUID id){
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(
+                categoryVariantService.deleteByCategoryVariantId(id)
         );
     }
 }

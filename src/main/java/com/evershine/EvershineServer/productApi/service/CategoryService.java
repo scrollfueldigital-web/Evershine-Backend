@@ -1,5 +1,10 @@
 package com.evershine.EvershineServer.productApi.service;
 
+import com.evershine.EvershineServer.productApi.entity.CategoryType;
+import com.evershine.EvershineServer.productApi.entity.CategoryVariant;
+import com.evershine.EvershineServer.productApi.repository.CategoryTypeRepository;
+import com.evershine.EvershineServer.productApi.repository.CategoryVariantRepository;
+import com.evershine.EvershineServer.productApi.repository.ProductRepository;
 import com.evershine.EvershineServer.projectExceptionHandler.DuplicateFilterException;
 import com.evershine.EvershineServer.projectExceptionHandler.FilterOptionNotFoundException;
 import com.evershine.EvershineServer.productApi.dto.CatalogueRequestDto;
@@ -12,11 +17,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service @RequiredArgsConstructor
 public class CategoryService {
     private final CategoryRepository categoryRepository;
-
+    private final ProductRepository productRepository;
+    private final CategoryVariantRepository variantRepository;
+    private final CategoryTypeRepository typeRepository;
     @Transactional
     public CatalogueResponseDto addCategory(CatalogueRequestDto catalogue){
 
@@ -61,6 +70,45 @@ public class CategoryService {
         category = categoryRepository.save(category);
 
         return toCatalogueResponseDto(category);
+    }
+
+    @Transactional
+    public String deleteCategory(UUID id) {
+
+        categoryRepository.findById(id)
+                .orElseThrow(() ->
+                        new FilterOptionNotFoundException(
+                                "Category does not exist with id: " + id));
+
+        long numberOfProducts = productRepository.deleteByCategory_Id(id);
+
+        List<CategoryType> types = typeRepository.findByCategory_Id(id);
+
+        for (CategoryType categoryType : types) {
+
+            // Delete products directly associated with this type
+            numberOfProducts += productRepository
+                    .deleteByCategoryType_Id(categoryType.getId());
+
+            // Fetch variants using the TYPE ID
+            List<CategoryVariant> variants =
+                    variantRepository.findByCategoryType_Id(categoryType.getId());
+
+            for (CategoryVariant variant : variants) {
+
+                numberOfProducts += productRepository
+                        .deleteByCategoryVariant_Id(variant.getId());
+
+                variantRepository.deleteById(variant.getId());
+            }
+
+            typeRepository.deleteById(categoryType.getId());
+        }
+
+        categoryRepository.deleteById(id);
+
+        return "Category deleted successfully! "
+                + numberOfProducts + " products removed completely";
     }
 
     private CatalogueResponseDto toCatalogueResponseDto(Category category) {

@@ -24,4 +24,5 @@ public interface CategoryTypeRepository extends JpaRepository<CategoryType, UUID
     GROUP BY c.id, c.name
 """)
     List<FilterSummaryDTO> getCategoryTypeSummaries();
+
 }
