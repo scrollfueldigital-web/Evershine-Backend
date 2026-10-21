@@ -1,7 +1,7 @@
 package com.evershine.EvershineServer.productApi.service;
 
 import com.evershine.EvershineServer.projectExceptionHandler.DuplicateFilterException;
-import com.evershine.EvershineServer.projectExceptionHandler.FilterOptionNotFoundException;
+import com.evershine.EvershineServer.projectExceptionHandler.ResourceNotFoundException;
 import com.evershine.EvershineServer.productApi.dto.FilterResponseDto;
 import com.evershine.EvershineServer.productApi.dto.ProductStatus;
 import com.evershine.EvershineServer.productApi.entity.Product;
@@ -38,7 +38,7 @@ public class SubGradeService {
     public FilterResponseDto getSubGrade(UUID id){
         SubGrade subGrade = subGradeRepository.findById(id)
                 .orElseThrow(()->
-                        new FilterOptionNotFoundException("SubGrade does not exists with id: "+id)
+                        new ResourceNotFoundException("SubGrade does not exists with id: "+id)
                 );
         // for admin can see deactivated as well as
         return toFilterResponseDto(subGrade);
@@ -65,7 +65,7 @@ public class SubGradeService {
     public String deleteSubGrade(UUID id){
         SubGrade subGrade = subGradeRepository.findById(id)
                 .orElseThrow(()->
-                        new FilterOptionNotFoundException("SubGrade does not exists with id: "+id)
+                        new ResourceNotFoundException("SubGrade does not exists with id: "+id)
                 );
         subGrade.setActive(false);
         List<Product> products = productRepository
@@ -83,7 +83,7 @@ public class SubGradeService {
     public FilterResponseDto updateSubGrade(String name, UUID id){
         SubGrade subGrade = subGradeRepository.findById(id)
                 .orElseThrow(()->
-                        new FilterOptionNotFoundException("SubGrade does not exists with id: "+id)
+                        new ResourceNotFoundException("SubGrade does not exists with id: "+id)
                 );
 
         // if xx already in db, and new update with same yy to xx so check new name as well as

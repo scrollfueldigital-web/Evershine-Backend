@@ -6,7 +6,7 @@ import com.evershine.EvershineServer.productApi.repository.CategoryTypeRepositor
 import com.evershine.EvershineServer.productApi.repository.CategoryVariantRepository;
 import com.evershine.EvershineServer.productApi.repository.ProductRepository;
 import com.evershine.EvershineServer.projectExceptionHandler.DuplicateFilterException;
-import com.evershine.EvershineServer.projectExceptionHandler.FilterOptionNotFoundException;
+import com.evershine.EvershineServer.projectExceptionHandler.ResourceNotFoundException;
 import com.evershine.EvershineServer.productApi.dto.CatalogueRequestDto;
 import com.evershine.EvershineServer.productApi.dto.CatalogueResponseDto;
 import com.evershine.EvershineServer.productApi.entity.Category;
@@ -17,8 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Service @RequiredArgsConstructor
 public class CategoryService {
@@ -50,7 +48,7 @@ public class CategoryService {
     @Transactional(readOnly = true)
     public CatalogueResponseDto getCategoryById(UUID id){
         Category category = categoryRepository.findById(id)
-                .orElseThrow(()->new FilterOptionNotFoundException("Category does not exist with id: "+id));
+                .orElseThrow(()->new ResourceNotFoundException("Category does not exist with id: "+id));
         return toCatalogueResponseDto(category);
     }
 
@@ -58,7 +56,7 @@ public class CategoryService {
     public CatalogueResponseDto updateCategoryById(UUID id, CatalogueRequestDto categoryRequestDto){
         Category category = categoryRepository.findById(id)
                 .orElseThrow(
-                        ()->new FilterOptionNotFoundException("Category does not exists with id: "+id)
+                        ()->new ResourceNotFoundException("Category does not exists with id: "+id)
                 );
         if(categoryRepository.existsByName(categoryRequestDto.getName()))
             throw new DuplicateFilterException("Category already exists with name: "+categoryRequestDto.getName());
@@ -77,7 +75,7 @@ public class CategoryService {
 
         categoryRepository.findById(id)
                 .orElseThrow(() ->
-                        new FilterOptionNotFoundException(
+                        new ResourceNotFoundException(
                                 "Category does not exist with id: " + id));
 
         long numberOfProducts = productRepository.deleteByCategory_Id(id);
@@ -126,4 +124,3 @@ public class CategoryService {
         return category;
     }
 }
-

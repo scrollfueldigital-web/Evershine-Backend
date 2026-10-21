@@ -1,7 +1,7 @@
 package com.evershine.EvershineServer.productApi.service;
 
 import com.evershine.EvershineServer.projectExceptionHandler.DuplicateFilterException;
-import com.evershine.EvershineServer.projectExceptionHandler.FilterOptionNotFoundException;
+import com.evershine.EvershineServer.projectExceptionHandler.ResourceNotFoundException;
 import com.evershine.EvershineServer.productApi.dto.FilterResponseDto;
 import com.evershine.EvershineServer.productApi.dto.ProductStatus;
 import com.evershine.EvershineServer.productApi.entity.Grade;
@@ -38,7 +38,7 @@ public class GradeService {
     public FilterResponseDto getGrade(UUID id){
         Grade grade = gradeRepository.findById(id)
                 .orElseThrow(()->
-                        new FilterOptionNotFoundException("Grade does not exists with id: "+id)
+                        new ResourceNotFoundException("Grade does not exists with id: "+id)
                 );
         // for admin can see deactivated as well as
         return toFilterResponseDto(grade);
@@ -65,7 +65,7 @@ public class GradeService {
     public String deleteGrade(UUID id){
         Grade grade = gradeRepository.findById(id)
                 .orElseThrow(()->
-                        new FilterOptionNotFoundException("Grade does not exists with id: "+id)
+                        new ResourceNotFoundException("Grade does not exists with id: "+id)
                 );
         grade.setActive(false);
         List<Product> products = productRepository
@@ -83,7 +83,7 @@ public class GradeService {
     public FilterResponseDto updateGrade(String name, UUID id){
         Grade grade = gradeRepository.findById(id)
                 .orElseThrow(()->
-                        new FilterOptionNotFoundException("Grade does not exists with id: "+id)
+                        new ResourceNotFoundException("Grade does not exists with id: "+id)
                 );
 
         // if xx already in db, and new update with same yy to xx so check new name as well as

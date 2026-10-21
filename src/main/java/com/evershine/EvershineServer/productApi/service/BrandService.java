@@ -1,7 +1,7 @@
 package com.evershine.EvershineServer.productApi.service;
 
 import com.evershine.EvershineServer.projectExceptionHandler.DuplicateFilterException;
-import com.evershine.EvershineServer.projectExceptionHandler.FilterOptionNotFoundException;
+import com.evershine.EvershineServer.projectExceptionHandler.ResourceNotFoundException;
 import com.evershine.EvershineServer.productApi.dto.FilterResponseDto;
 import com.evershine.EvershineServer.productApi.dto.ProductStatus;
 import com.evershine.EvershineServer.productApi.entity.Brand;
@@ -39,7 +39,7 @@ public class BrandService {
     public FilterResponseDto getBrand(UUID id){
         Brand brand = brandRepository.findById(id)
                 .orElseThrow(()->
-                        new FilterOptionNotFoundException("Brand does not exists with id: "+id)
+                        new ResourceNotFoundException("Brand does not exists with id: "+id)
                 );
         // for admin can see deactivated as well as
         return toFilterResponseDto(brand);
@@ -67,7 +67,7 @@ public class BrandService {
     public String deleteBrand(UUID id){
         Brand brand = brandRepository.findById(id)
                 .orElseThrow(()->
-                        new FilterOptionNotFoundException("Brand does not exists with id: "+id)
+                        new ResourceNotFoundException("Brand does not exists with id: "+id)
                 );
         brand.setActive(false);
         List<Product> products = productRepository
@@ -85,7 +85,7 @@ public class BrandService {
     public FilterResponseDto updateBrand(String name, UUID id){
         Brand brand = brandRepository.findById(id)
                 .orElseThrow(()->
-                        new FilterOptionNotFoundException("Brand does not exists with id: "+id)
+                        new ResourceNotFoundException("Brand does not exists with id: "+id)
                 );
 
         // if xx already in db, and new update with same yy to xx so check new name as well as

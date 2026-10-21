@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evershine Cart API Dashboard</title>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --success: #16a34a;
+            --danger: #dc2626;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            padding: 24px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            background: var(--surface);
+            padding: 16px 24px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .user-switcher {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        select, input, button {
+            font-size: 14px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            outline: none;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            background-color: var(--primary);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.15s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+        }
+        .btn-success:hover {
+            background-color: #15803d;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            background-color: #f1f5f9;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+        }
+
+        .cart-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .cart-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .cart-card img {
+            width: 130px;
+            height: 130px;
+            object-fit: cover;
+            background: #f1f5f9;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .card-details {
+            flex: 1;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .card-subtitle {
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-bottom: 16px;
+        }
+
+        .attributes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 14px;
+            margin-bottom: 16px;
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .attr-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .attr-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-sub);
+        }
+
+        .card-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--border);
+            padding-top: 14px;
+        }
+
+        .qty-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .qty-control button {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            background: #e2e8f0;
+            color: var(--text-main);
+        }
+
+        .qty-control input {
+            width: 50px;
+            text-align: center;
+        }
+
+        .console-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            height: fit-content;
+        }
+
+        .console-panel h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-sub);
+        }
+
+        pre {
+            background: #0f172a;
+            color: #38bdf8;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            overflow-x: auto;
+            max-height: 480px;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-sub);
+            background: var(--surface);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .status-badge {
+            display: inline-block;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #e2e8f0;
+            margin-top: 4px;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-card {
+            background: #fff;
+            width: 560px;
+            max-width: 90vw;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div>
+        <h2>Evershine Cart API Test Bench</h2>
+        <span id="apiHostLabel" class="status-badge">http://localhost:8080</span>
+    </div>
+    <div class="user-switcher">
+        <label for="userSelect"><strong>Active User:</strong></label>
+        <select id="userSelect" onchange="loadActiveUserCart()">
+            <option value="a46cd714-affc-4c3b-a2fd-cfb810c6053c">admin (a46cd714...)</option>
+            <option value="3ea33c92-6b5c-4ca6-b4b6-408759722ff8">user1 (3ea33c92...)</option>
+        </select>
+        <button onclick="loadActiveUserCart()">Reload Cart</button>
+        <button class="btn-success" onclick="openAddCartModal()">+ Add Item (POST)</button>
+    </div>
+</header>
+
+<div class="layout">
+    <main class="cart-container" id="cartContainer">
+        <div class="empty-cart">Loading cart...</div>
+    </main>
+
+    <aside class="console-panel">
+        <h3>Payload / Response Debug Monitor</h3>
+        <pre id="debugOutput">// Output logs will appear here</pre>
+    </aside>
+</div>
+
+<!-- Modal: Add To Cart (POST) -->
+<div class="modal-overlay" id="addCartModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>Add Product to Cart (POST /api/cart)</h3>
+            <button class="btn-outline" onclick="closeAddCartModal()">&times;</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div class="attr-group">
+                <label>User</label>
+                <select id="postAppUserId">
+                    <option value="a46cd714-affc-4c3b-a2fd-cfb810c6053c">admin (a46cd714-affc-4c3b-a2fd-cfb810c6053c)</option>
+                    <option value="3ea33c92-6b5c-4ca6-b4b6-408759722ff8">user1 (3ea33c92-6b5c-4ca6-b4b6-408759722ff8)</option>
+                </select>
+            </div>
+
+            <div class="attr-group">
+                <label>Product Slug</label>
+                <input type="text" id="postProductSlug" value="SAIL-Mild-Steel-Channels-E250A-ISMC" readonly style="background:#f1f5f9;" />
+            </div>
+
+            <div class="attr-group">
+                <label>Quantity</label>
+                <input type="number" id="postQuantity" value="1" min="1" />
+            </div>
+
+            <div>
+                <label style="font-size: 12px; font-weight: 600; color: var(--text-sub); margin-bottom: 6px; display: block;">Select Attributes</label>
+                <div class="attributes-grid" id="postAttributesContainer">
+                    <!-- Dynamic schema options generated from existingAttributes -->
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-outline" onclick="closeAddCartModal()">Cancel</button>
+            <button class="btn-success" onclick="submitAddToCart()">Submit POST Request</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://localhost:8080/api/cart';
+    let currentCartData = [];
+
+    // Fallback schema matching your backend's exact product specifications
+    const fallbackSchema = [
+        {
+            "customInput": false,
+            "label": "Flange width",
+            "unit": "mm",
+            "values": ["40", "50", "65", "75", "82", "90", "200", "250"]
+        },
+        {
+            "customInput": false,
+            "label": "Web depth",
+            "unit": "mm",
+            "values": ["75", "82", "100", "125", "200", "250", "300"]
+        },
+        {
+            "customInput": false,
+            "label": "Sectional weight",
+            "unit": "kg/m",
+            "values": ["7.5", "9.56", "13.8", "16.8", "22.3", "34.2", "36.3"]
+        },
+        {
+            "customInput": false,
+            "label": "Cut length",
+            "unit": "mm",
+            "values": ["6000", "12000"]
+        }
+    ];
+
+    async function loadActiveUserCart() {
+        const userId = document.getElementById('userSelect').value;
+        const container = document.getElementById('cartContainer');
+        container.innerHTML = '<div class="empty-cart">Loading carts...</div>';
+
+        try {
+            const res = await fetch(`${API_BASE}/${userId}`, {
+                headers: { 'accept': '*/*' }
+            });
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+
+            currentCartData = await res.json();
+            renderDebug({ action: 'GET_CART', userId, response: currentCartData });
+            renderCartList(currentCartData);
+        } catch (err) {
+            container.innerHTML = `<div class="empty-cart" style="color:var(--danger)">Error: ${err.message}</div>`;
+            renderDebug({ error: err.message });
+        }
+    }
+
+    function renderCartList(items) {
+        const container = document.getElementById('cartContainer');
+        if (!items || items.length === 0) {
+            container.innerHTML = '<div class="empty-cart">No items in this cart. Use "+ Add Item (POST)" above to add one.</div>';
+            return;
+        }
+
+        container.innerHTML = items.map((cart, idx) => {
+            const img = cart.productImageUrl && cart.productImageUrl !== 'string'
+                ? cart.productImageUrl
+                : 'https://via.placeholder.com/150?text=Product';
+
+            return `
+                <div class="cart-card" id="cart-${cart.id}">
+                    <img src="${img}" alt="${cart.productName || cart.productSlug}" />
+                    <div class="card-details">
+                        <h4 class="card-title">${cart.productName || cart.productSlug}</h4>
+                        <div class="card-subtitle">Slug: <code>${cart.productSlug}</code> | Cart ID: <code>${cart.id}</code></div>
+
+                        <div class="attributes-grid">
+                            ${renderAttributeTogglers(cart, idx)}
+                        </div>
+
+                        <div class="card-actions">
+                            <div class="qty-control">
+                                <button onclick="adjustQty(${idx}, -1)">-</button>
+                                <input type="number" id="qty-${idx}" value="${cart.quantity}" min="1" />
+                                <button onclick="adjustQty(${idx}, 1)">+</button>
+                            </div>
+                            <button onclick="triggerUpdate('${cart.id}', ${idx})">Save Changes (PUT)</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderAttributeTogglers(cart, cartIdx) {
+        const selectedMap = new Map();
+        (cart.selectedAttributes || []).forEach(a => {
+            if (a && a.label !== undefined && a.value !== undefined) {
+                const cleanKey = String(a.label).trim().toLowerCase();
+                const cleanVal = String(a.value).trim();
+                selectedMap.set(cleanKey, cleanVal);
+            }
+        });
+
+        return (cart.existingAttributes || []).map((schema, attrIdx) => {
+            const schemaKey = String(schema.label || '').trim().toLowerCase();
+            const currentValue = selectedMap.has(schemaKey) ? selectedMap.get(schemaKey) : '';
+            const inputId = `attr-${cartIdx}-${attrIdx}`;
+
+            if (schema.customInput) {
+                return `
+                    <div class="attr-group">
+                        <label>${schema.label} (${schema.unit || ''})</label>
+                        <input
+                            type="text"
+                            id="${inputId}"
+                            data-label="${schema.label}"
+                            data-unit="${schema.unit || ''}"
+                            value="${currentValue}"
+                            placeholder="${schema.min || ''} - ${schema.max || ''}"
+                        />
+                    </div>
+                `;
+            }
+
+            const normalizedValues = (schema.values || []).map(v => String(v).trim());
+            const hasMatch = currentValue && normalizedValues.some(v => v.toLowerCase() === currentValue.toLowerCase());
+
+            let optionsHtml = '';
+            if (currentValue && !hasMatch) {
+                optionsHtml += `<option value="${currentValue}" selected="selected">${currentValue} ${schema.unit || ''} (Current)</option>`;
+            }
+
+            optionsHtml += (schema.values || []).map(val => {
+                const strVal = String(val).trim();
+                const isSelected = currentValue && strVal.toLowerCase() === currentValue.toLowerCase();
+                return `<option value="${strVal}" ${isSelected ? 'selected="selected"' : ''}>${strVal} ${schema.unit || ''}</option>`;
+            }).join('');
+
+            return `
+                <div class="attr-group">
+                    <label>${schema.label}</label>
+                    <select id="${inputId}" data-label="${schema.label}" data-unit="${schema.unit || ''}">
+                        ${optionsHtml}
+                    </select>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function adjustQty(cartIdx, delta) {
+        const input = document.getElementById(`qty-${cartIdx}`);
+        let val = parseInt(input.value, 10) || 1;
+        val = Math.max(1, val + delta);
+        input.value = val;
+    }
+
+    async function triggerUpdate(cartId, cartIdx) {
+        const userId = document.getElementById('userSelect').value;
+        const cart = currentCartData[cartIdx];
+        const quantity = parseInt(document.getElementById(`qty-${cartIdx}`).value, 10);
+
+        const updatedAttributes = [];
+        (cart.existingAttributes || []).forEach((schema, attrIdx) => {
+            const elem = document.getElementById(`attr-${cartIdx}-${attrIdx}`);
+            if (elem) {
+                updatedAttributes.push({
+                    label: elem.dataset.label,
+                    unit: elem.dataset.unit,
+                    value: elem.value
+                });
+            }
+        });
+
+        const payload = {
+            quantity: quantity,
+            userId: userId,
+            productSlug: cart.productSlug,
+            cartAttributes: updatedAttributes
+        };
+
+        renderDebug({ action: 'PUT_REQUEST', endpoint: `${API_BASE}/${cartId}`, payload });
+
+        try {
+            const res = await fetch(`${API_BASE}/${cartId}`, {
+                method: 'PUT',
+                headers: {
+                    'accept': '*/*',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+
+            const updatedCart = await res.json();
+            renderDebug({ action: 'PUT_SUCCESS_RESPONSE', response: updatedCart });
+            loadActiveUserCart();
+        } catch (err) {
+            renderDebug({ action: 'PUT_ERROR', message: err.message });
+            alert(`Update failed: ${err.message}`);
+        }
+    }
+
+    // Modal & POST /api/cart Implementation
+    function openAddCartModal() {
+        // Sync modal user select with active header user
+        document.getElementById('postAppUserId').value = document.getElementById('userSelect').value;
+
+        // Use schema from currentCartData if present, otherwise use fallbackSchema
+        const schema = (currentCartData && currentCartData.length > 0 && currentCartData[0].existingAttributes)
+            ? currentCartData[0].existingAttributes
+            : fallbackSchema;
+
+        const container = document.getElementById('postAttributesContainer');
+        container.innerHTML = schema.map((attr, idx) => {
+            const inputId = `post-attr-${idx}`;
+            if (attr.customInput) {
+                return `
+                    <div class="attr-group">
+                        <label>${attr.label} (${attr.unit || ''})</label>
+                        <input type="text" id="${inputId}" data-label="${attr.label}" data-unit="${attr.unit || ''}" placeholder="${attr.min || ''} - ${attr.max || ''}" value="${attr.min || ''}" />
+                    </div>
+                `;
+            }
+
+            const options = (attr.values || []).map(v => `<option value="${v}">${v} ${attr.unit || ''}</option>`).join('');
+            return `
+                <div class="attr-group">
+                    <label>${attr.label}</label>
+                    <select id="${inputId}" data-label="${attr.label}" data-unit="${attr.unit || ''}">
+                        ${options}
+                    </select>
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('addCartModal').style.display = 'flex';
+    }
+
+    function closeAddCartModal() {
+        document.getElementById('addCartModal').style.display = 'none';
+    }
+
+    async function submitAddToCart() {
+        const appUserId = document.getElementById('postAppUserId').value;
+        const productSlug = document.getElementById('postProductSlug').value;
+        const quantity = parseInt(document.getElementById('postQuantity').value, 10) || 1;
+
+        const selectedCartAttributes = [];
+        const container = document.getElementById('postAttributesContainer');
+        const elements = container.querySelectorAll('select, input');
+
+        elements.forEach(elem => {
+            selectedCartAttributes.push({
+                label: elem.dataset.label,
+                unit: elem.dataset.unit,
+                value: elem.value
+            });
+        });
+
+        const payload = {
+            appUserId: appUserId,
+            productSlug: productSlug,
+            selectedCartAttributes: selectedCartAttributes,
+            quantity: quantity
+        };
+
+        renderDebug({ action: 'POST_REQUEST', endpoint: API_BASE, payload });
+
+        try {
+            const res = await fetch(API_BASE, {
+                method: 'POST',
+                headers: {
+                    'accept': '*/*',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+
+            const responseData = await res.json();
+            renderDebug({ action: 'POST_SUCCESS_RESPONSE', response: responseData });
+
+            closeAddCartModal();
+
+            // Set dashboard user view to the user that received the item and reload
+            document.getElementById('userSelect').value = appUserId;
+            loadActiveUserCart();
+        } catch (err) {
+            renderDebug({ action: 'POST_ERROR', message: err.message });
+            alert(`POST failed: ${err.message}`);
+        }
+    }
+
+    function renderDebug(data) {
+        document.getElementById('debugOutput').textContent = JSON.stringify(data, null, 2);
+    }
+
+    window.onload = loadActiveUserCart;
+</script>
+</body>
+</html>

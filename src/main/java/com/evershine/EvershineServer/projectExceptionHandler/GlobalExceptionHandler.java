@@ -48,8 +48,8 @@ public class GlobalExceptionHandler {
 
     // 3. Handles Missing Item Errors (404 Not Found)
 
-    @ExceptionHandler(FilterOptionNotFoundException.class)
-    public ResponseEntity<ErrorResponseDto> handleNotFound(FilterOptionNotFoundException ex) {
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleNotFound(ResourceNotFoundException ex) {
         ErrorResponseDto error = new ErrorResponseDto(
                 LocalDateTime.now(),
                 HttpStatus.NOT_FOUND.value(),
@@ -80,6 +80,17 @@ public class GlobalExceptionHandler {
                 ex.getMessage()
         );
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(CartQuantityException.class)
+    public ResponseEntity<ErrorResponseDto> handleCartQuantityException(CartQuantityException ex){
+        ErrorResponseDto dto = new ErrorResponseDto(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage()
+        );
+
+        return new ResponseEntity<>(dto,HttpStatus.BAD_REQUEST);
     }
 
     // 4. Handles Unexpected Server Faults (500 Internal Server Error)

@@ -1,7 +1,7 @@
 package com.evershine.EvershineServer.productApi.service;
 
 import com.evershine.EvershineServer.projectExceptionHandler.DuplicateFilterException;
-import com.evershine.EvershineServer.projectExceptionHandler.FilterOptionNotFoundException;
+import com.evershine.EvershineServer.projectExceptionHandler.ResourceNotFoundException;
 import com.evershine.EvershineServer.productApi.dto.FilterResponseDto;
 import com.evershine.EvershineServer.productApi.dto.ProductStatus;
 import com.evershine.EvershineServer.productApi.entity.Product;
@@ -38,7 +38,7 @@ public class SubBrandService {
     public FilterResponseDto getSubBrand(UUID id){
         SubBrand brand = subBrandRepository.findById(id)
                 .orElseThrow(()->
-                        new FilterOptionNotFoundException("Sub-brand does not exists with id: "+id)
+                        new ResourceNotFoundException("Sub-brand does not exists with id: "+id)
                 );
         // for admin can see deactivated as well as
         return toFilterResponseDto(brand);
@@ -65,7 +65,7 @@ public class SubBrandService {
     public String deleteSubBrand(UUID id){
         SubBrand brand = subBrandRepository.findById(id)
                 .orElseThrow(()->
-                        new FilterOptionNotFoundException("Sub-Brand does not exists with id: "+id)
+                        new ResourceNotFoundException("Sub-Brand does not exists with id: "+id)
                 );
         brand.setActive(false);
         List<Product> products = productRepository
@@ -83,7 +83,7 @@ public class SubBrandService {
     public FilterResponseDto updateBrand(String name, UUID id){
         SubBrand brand = subBrandRepository.findById(id)
                 .orElseThrow(()->
-                        new FilterOptionNotFoundException("SubBrand does not exists with id: "+id)
+                        new ResourceNotFoundException("SubBrand does not exists with id: "+id)
                 );
 
         // if xx already in db, and new update with same yy to xx so check new name as well as

@@ -2,7 +2,7 @@ package com.evershine.EvershineServer.productApi.service;
 
 import com.evershine.EvershineServer.productApi.repository.ProductRepository;
 import com.evershine.EvershineServer.projectExceptionHandler.DuplicateFilterException;
-import com.evershine.EvershineServer.projectExceptionHandler.FilterOptionNotFoundException;
+import com.evershine.EvershineServer.projectExceptionHandler.ResourceNotFoundException;
 import com.evershine.EvershineServer.productApi.dto.CatalogueRequestDto;
 import com.evershine.EvershineServer.productApi.dto.CatalogueResponseDto;
 import com.evershine.EvershineServer.productApi.entity.CategoryType;
@@ -33,7 +33,7 @@ public class CategoryVariantService {
         // parentId = CategoryType ID
         CategoryType categoryType = categoryTypeRepository.findById(parentId)
                 .orElseThrow(() ->
-                        new FilterOptionNotFoundException(
+                        new ResourceNotFoundException(
                                 "CategoryType does not exist with id: " + parentId
                         )
                 );
@@ -73,7 +73,7 @@ public class CategoryVariantService {
 
         CategoryVariant variant = categoryVariantRepository.findById(id)
                 .orElseThrow(() ->
-                        new FilterOptionNotFoundException(
+                        new ResourceNotFoundException(
                                 "CategoryVariant does not exist with id: " + id
                         )
                 );
@@ -90,7 +90,7 @@ public class CategoryVariantService {
 
         CategoryVariant variant = categoryVariantRepository.findById(id)
                 .orElseThrow(() ->
-                        new FilterOptionNotFoundException(
+                        new ResourceNotFoundException(
                                 "CategoryVariant does not exist with id: " + id
                         )
                 );
@@ -120,7 +120,7 @@ public class CategoryVariantService {
     @Transactional
     public String deleteByCategoryVariantId(UUID id){
         categoryVariantRepository.findById(id)
-                .orElseThrow(()->new FilterOptionNotFoundException("Category variant does not exist with id: "+id));
+                .orElseThrow(()->new ResourceNotFoundException("Category variant does not exist with id: "+id));
         long numberOfProducts = productRepository.deleteByCategoryVariant_Id(id);
         categoryVariantRepository.deleteById(id);
         return "Category variants deleted successfully! "+numberOfProducts+" products are removed completely.";

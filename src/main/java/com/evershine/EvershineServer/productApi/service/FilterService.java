@@ -1,6 +1,6 @@
 package com.evershine.EvershineServer.productApi.service;
 
-import com.evershine.EvershineServer.projectExceptionHandler.FilterOptionNotFoundException;
+import com.evershine.EvershineServer.projectExceptionHandler.ResourceNotFoundException;
 import com.evershine.EvershineServer.productApi.dto.AllAvailableFilterDto;
 import com.evershine.EvershineServer.productApi.dto.CategoryDto;
 import com.evershine.EvershineServer.productApi.dto.CategoryTypeDto;
@@ -113,49 +113,49 @@ public class FilterService {
     public Category getCategory(UUID categoryId){
         return categoryRepository.findById(categoryId)
                 .orElseThrow(
-                        ()-> new FilterOptionNotFoundException("Category does not exists with id: "+categoryId)
+                        ()-> new ResourceNotFoundException("Category does not exists with id: "+categoryId)
                 );
     }
 
     public CategoryType getCategoryType(UUID id){
         return categoryTypeRepository.findById(id)
                 .orElseThrow(
-                        ()-> new FilterOptionNotFoundException("CategoryType does not exists with id: "+id)
+                        ()-> new ResourceNotFoundException("CategoryType does not exists with id: "+id)
                 );
     }
 
     public CategoryVariant getCategoryVariant(UUID id){
         return categoryVariantRepository.findById(id)
                 .orElseThrow(
-                        ()-> new FilterOptionNotFoundException("CategoryVariant does not exists with id: "+id)
+                        ()-> new ResourceNotFoundException("CategoryVariant does not exists with id: "+id)
                 );
     }
 
     public Brand getBrand(UUID id){
         return brandRepository.findById(id)
                 .orElseThrow(
-                        ()-> new FilterOptionNotFoundException("Brand does not exists with id: "+id)
+                        ()-> new ResourceNotFoundException("Brand does not exists with id: "+id)
                 );
     }
 
     public SubBrand getSubBrand(UUID id){
         return subBrandRepository.findById(id)
                 .orElseThrow(
-                        ()-> new FilterOptionNotFoundException("SubBrand does not exists with id: "+id)
+                        ()-> new ResourceNotFoundException("SubBrand does not exists with id: "+id)
                 );
     }
 
     public Grade getGrade(UUID id){
         return gradeRepository.findById(id)
                 .orElseThrow(
-                        ()-> new FilterOptionNotFoundException("Grade does not exists with id: "+id)
+                        ()-> new ResourceNotFoundException("Grade does not exists with id: "+id)
                 );
     }
 
     public SubGrade getSubGrade(UUID id){
         return subGradeRepository.findById(id)
                 .orElseThrow(
-                        ()-> new FilterOptionNotFoundException("SubGrade does not exists with id: "+id)
+                        ()-> new ResourceNotFoundException("SubGrade does not exists with id: "+id)
                 );
     }
 }
