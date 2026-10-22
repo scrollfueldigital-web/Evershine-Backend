@@ -22,7 +22,7 @@ public interface SubBrandRepository extends JpaRepository<SubBrand, UUID> {
     )
     FROM SubBrand sb
     LEFT JOIN Product p ON p.subBrand.id = sb.id
-    GROUP BY sb.id, sb.name
+    GROUP BY sb.id, sb.name, sb.active
 """)
     List<ActiveFilterSummaryDTO> getSubBrandSummaries();
 }

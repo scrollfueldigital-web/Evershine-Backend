@@ -1,5 +1,7 @@
 package com.evershine.EvershineServer.productApi.service;
 
+import com.evershine.EvershineServer.productApi.dto.ProductStatus;
+import com.evershine.EvershineServer.productApi.entity.Product;
 import com.evershine.EvershineServer.productApi.repository.ProductRepository;
 import com.evershine.EvershineServer.projectExceptionHandler.DuplicateFilterException;
 import com.evershine.EvershineServer.projectExceptionHandler.ResourceNotFoundException;
@@ -10,6 +12,8 @@ import com.evershine.EvershineServer.productApi.entity.CategoryVariant;
 import com.evershine.EvershineServer.productApi.repository.CategoryTypeRepository;
 import com.evershine.EvershineServer.productApi.repository.CategoryVariantRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +29,12 @@ public class CategoryVariantService {
     private final ProductRepository productRepository;
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "filters", allEntries = true)
+            }
+    )
     public CatalogueResponseDto addCategoryVariant(
             UUID parentId,
             CatalogueRequestDto dto
@@ -83,6 +93,12 @@ public class CategoryVariantService {
 
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "filters", allEntries = true)
+            }
+    )
     public CatalogueResponseDto updateCategoryVariantById(
             UUID id,
             CatalogueRequestDto dto
@@ -118,12 +134,35 @@ public class CategoryVariantService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "filters", allEntries = true),
+                    @CacheEvict(value = "productList", allEntries = true)
+            }
+    )
     public String deleteByCategoryVariantId(UUID id){
         categoryVariantRepository.findById(id)
                 .orElseThrow(()->new ResourceNotFoundException("Category variant does not exist with id: "+id));
-        long numberOfProducts = productRepository.deleteByCategoryVariant_Id(id);
+
+        // mark product unavailable and remove variant mark it as null instead of hard delete
+//        long numberOfProducts = productRepository.deleteByCategoryVariant_Id(id);
+
+        List<Product> productList = productRepository.findByCategoryVariantId(id);
+
+        // remove variant, mark them as unavailable
+
+        productList = productList.stream()
+                        .map(p->{
+                            p.setProductStatus(ProductStatus.UNAVAILABLE);
+                            p.setCategoryVariant(null);
+                            return p;
+                        })
+                                .toList();
+
+        productRepository.saveAll(productList);
         categoryVariantRepository.deleteById(id);
-        return "Category variants deleted successfully! "+numberOfProducts+" products are removed completely.";
+        return "Category variants deleted successfully! "+productList.size()+" products are removed completely.";
     }
 
     private CategoryVariant toCategoryVariant(

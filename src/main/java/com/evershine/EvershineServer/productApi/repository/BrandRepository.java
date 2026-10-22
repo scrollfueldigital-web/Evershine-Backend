@@ -20,7 +20,7 @@ public interface BrandRepository extends JpaRepository<Brand, UUID> {
     )
     FROM Brand b
     LEFT JOIN Product p ON p.brand.id = b.id
-    GROUP BY b.id, b.name
+    GROUP BY b.id, b.name, b.active
 """)
     List<ActiveFilterSummaryDTO> getBrandSummaries();
 

@@ -9,6 +9,8 @@ import com.evershine.EvershineServer.productApi.entity.Product;
 import com.evershine.EvershineServer.productApi.repository.BrandRepository;
 import com.evershine.EvershineServer.productApi.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,12 @@ public class BrandService {
     private final AdminService adminService;
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "filters", allEntries = true)
+            }
+    )
     public FilterResponseDto addBrand(String brandName){
         if(brandRepository.existsByName(brandName)){
             throw new DuplicateFilterException("Brand name already exist with name: "+brandName);
@@ -64,6 +72,13 @@ public class BrandService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "filters", allEntries = true),
+                    @CacheEvict(value = "productList", allEntries = true)
+            }
+    )
     public String deleteBrand(UUID id){
         Brand brand = brandRepository.findById(id)
                 .orElseThrow(()->
@@ -82,6 +97,12 @@ public class BrandService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "filters", allEntries = true)
+            }
+    )
     public FilterResponseDto updateBrand(String name, UUID id){
         Brand brand = brandRepository.findById(id)
                 .orElseThrow(()->

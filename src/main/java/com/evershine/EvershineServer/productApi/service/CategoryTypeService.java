@@ -1,6 +1,8 @@
 package com.evershine.EvershineServer.productApi.service;
 
+import com.evershine.EvershineServer.productApi.dto.ProductStatus;
 import com.evershine.EvershineServer.productApi.entity.CategoryVariant;
+import com.evershine.EvershineServer.productApi.entity.Product;
 import com.evershine.EvershineServer.productApi.repository.CategoryVariantRepository;
 import com.evershine.EvershineServer.productApi.repository.ProductRepository;
 import com.evershine.EvershineServer.projectExceptionHandler.DuplicateFilterException;
@@ -12,12 +14,16 @@ import com.evershine.EvershineServer.productApi.entity.CategoryType;
 import com.evershine.EvershineServer.productApi.repository.CategoryRepository;
 import com.evershine.EvershineServer.productApi.repository.CategoryTypeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service @RequiredArgsConstructor
 public class CategoryTypeService {
@@ -28,6 +34,12 @@ public class CategoryTypeService {
     private final ProductRepository productRepository;
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "filters", allEntries = true)
+            }
+    )
     public CatalogueResponseDto addCategoryType(UUID parentId,CatalogueRequestDto dto){
 
         Category category = categoryRepository.findById(parentId)
@@ -61,6 +73,12 @@ public class CategoryTypeService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "filters", allEntries = true)
+            }
+    )
     public CatalogueResponseDto updateCategoryTypeById(UUID id, CatalogueRequestDto dto){
         CategoryType type = categoryTypeRepository.findById(id)
                 .orElseThrow(
@@ -80,28 +98,46 @@ public class CategoryTypeService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "filters", allEntries = true),
+                    @CacheEvict(value = "productList", allEntries = true)
+            }
+    )
     public String deleteCategoryType(UUID id){
-        //checking if category type exists?
-        categoryTypeRepository.findById(id)
-                .orElseThrow(()->new ResourceNotFoundException("Category Type does not exist with id: "+id));
+        CategoryType type = categoryTypeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category Type does not exist with id: " + id));
 
-        // deleting associated product first to avoid foreign key constraints
-        AtomicLong numberOfProducts = new AtomicLong(productRepository.deleteByCategoryType_Id(id));
-
-        // delete associated variants
+        // 1. Get all child variants
         List<CategoryVariant> categoryVariants = categoryVariantRepository.findByCategoryType_Id(id);
 
-        // delete each variant associated products
-        categoryVariants.forEach(
-                variant->{
-                    numberOfProducts.addAndGet(productRepository.deleteByCategoryVariant_Id(variant.getId()));
-                    categoryVariantRepository.deleteById(variant.getId());
-                }
-        );
+        // 2. Collect ALL affected products without duplicates using a Set
+        Set<Product> affectedProducts = new HashSet<>(productRepository.findByCategoryTypeId(id));
+        for (CategoryVariant variant : categoryVariants) {
+            affectedProducts.addAll(productRepository.findByCategoryVariantId(variant.getId()));
+        }
 
+        // 3. Detach type and variant from products (keep category!)
+        for (Product p : affectedProducts) {
+            p.setCategoryType(null);
+            p.setCategoryVariant(null);
+            p.setProductStatus(ProductStatus.UNAVAILABLE);
+        }
+
+        // 4. Flush changes to DB FIRST to clear all foreign keys
+        productRepository.saveAllAndFlush(affectedProducts);
+
+        // 5. Delete child variants in one batch, then the type
+        if (!categoryVariants.isEmpty()) {
+            categoryVariantRepository.deleteAll(categoryVariants);
+        }
         categoryTypeRepository.deleteById(id);
-        return "Category Type deleted successfully! "+numberOfProducts+" products are removed completely";
+
+        return "Category Type " + type.getName() + " deleted successfully! "
+                + affectedProducts.size() + " products marked as unavailable.";
     }
+
 
     private CategoryType toCategoryType(Category category, CatalogueRequestDto dto) {
         CategoryType type = new CategoryType();

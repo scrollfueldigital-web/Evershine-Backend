@@ -150,7 +150,7 @@ public class ProductController {
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
     @PutMapping("/update/{id}")
-    public ResponseEntity<ProductLightResponseDto> updateProduct(@PathVariable UUID id, @RequestBody ProductRequestDto productRequestDto){
+    public ResponseEntity<ProductLightResponseDto> updateProduct(@PathVariable UUID id, @RequestBody @Valid ProductRequestDto productRequestDto){
         return ResponseEntity.ok(productService.updateProductById(id, productRequestDto));
     }
 

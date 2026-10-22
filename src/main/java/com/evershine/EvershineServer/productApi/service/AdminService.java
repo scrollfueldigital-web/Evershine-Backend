@@ -8,6 +8,7 @@ import com.evershine.EvershineServer.productApi.entity.Grade;
 import com.evershine.EvershineServer.productApi.entity.SubGrade;
 import com.evershine.EvershineServer.productApi.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class AdminService {
     private final CategoryTypeRepository categoryTypeRepository;
     private final CategoryVariantRepository categoryVariantRepository;
 
+    @Cacheable("dashboard")
     public ProductAdminDashboardDTO getDashboard() {
 
         long total = productRepository.count();

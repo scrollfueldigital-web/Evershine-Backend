@@ -1,7 +1,9 @@
 package com.evershine.EvershineServer.productApi.service;
 
+import com.evershine.EvershineServer.productApi.dto.ProductStatus;
 import com.evershine.EvershineServer.productApi.entity.CategoryType;
 import com.evershine.EvershineServer.productApi.entity.CategoryVariant;
+import com.evershine.EvershineServer.productApi.entity.Product;
 import com.evershine.EvershineServer.productApi.repository.CategoryTypeRepository;
 import com.evershine.EvershineServer.productApi.repository.CategoryVariantRepository;
 import com.evershine.EvershineServer.productApi.repository.ProductRepository;
@@ -12,11 +14,13 @@ import com.evershine.EvershineServer.productApi.dto.CatalogueResponseDto;
 import com.evershine.EvershineServer.productApi.entity.Category;
 import com.evershine.EvershineServer.productApi.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service @RequiredArgsConstructor
 public class CategoryService {
@@ -25,6 +29,12 @@ public class CategoryService {
     private final CategoryVariantRepository variantRepository;
     private final CategoryTypeRepository typeRepository;
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "filters", allEntries = true)
+            }
+    )
     public CatalogueResponseDto addCategory(CatalogueRequestDto catalogue){
 
         if(categoryRepository.existsByName(catalogue.getName()))
@@ -53,6 +63,12 @@ public class CategoryService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "filters", allEntries = true)
+            }
+    )
     public CatalogueResponseDto updateCategoryById(UUID id, CatalogueRequestDto categoryRequestDto){
         Category category = categoryRepository.findById(id)
                 .orElseThrow(
@@ -71,43 +87,57 @@ public class CategoryService {
     }
 
     @Transactional
-    public String deleteCategory(UUID id) {
-
-        categoryRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Category does not exist with id: " + id));
-
-        long numberOfProducts = productRepository.deleteByCategory_Id(id);
-
-        List<CategoryType> types = typeRepository.findByCategory_Id(id);
-
-        for (CategoryType categoryType : types) {
-
-            // Delete products directly associated with this type
-            numberOfProducts += productRepository
-                    .deleteByCategoryType_Id(categoryType.getId());
-
-            // Fetch variants using the TYPE ID
-            List<CategoryVariant> variants =
-                    variantRepository.findByCategoryType_Id(categoryType.getId());
-
-            for (CategoryVariant variant : variants) {
-
-                numberOfProducts += productRepository
-                        .deleteByCategoryVariant_Id(variant.getId());
-
-                variantRepository.deleteById(variant.getId());
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "filters", allEntries = true),
+                    @CacheEvict(value = "productList", allEntries = true)
             }
+    )
+    public String deleteCategory(UUID id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category does not exist with id: " + id));
 
-            typeRepository.deleteById(categoryType.getId());
+        // 1. Fetch entire hierarchy under this category
+        List<CategoryType> types = typeRepository.findByCategory_Id(id);
+        List<CategoryVariant> allVariants = new ArrayList<>();
+        for (CategoryType t : types) {
+            allVariants.addAll(variantRepository.findByCategoryType_Id(t.getId()));
         }
 
+        // 2. Collect ALL unique products affected across Category, Types, and Variants
+        Set<Product> affectedProducts = new HashSet<>(productRepository.findByCategoryId(id));
+        for (CategoryType t : types) {
+            affectedProducts.addAll(productRepository.findByCategoryTypeId(t.getId()));
+        }
+        for (CategoryVariant v : allVariants) {
+            affectedProducts.addAll(productRepository.findByCategoryVariantId(v.getId()));
+        }
+
+        // 3. Detach all 3 from products
+        for (Product p : affectedProducts) {
+            p.setCategory(null);
+            p.setCategoryType(null);
+            p.setCategoryVariant(null);
+            p.setProductStatus(ProductStatus.UNAVAILABLE);
+        }
+
+        // 4. Flush to database FIRST so foreign keys are cleared
+        productRepository.saveAllAndFlush(affectedProducts);
+
+        // 5. Delete children in batch, then the category
+        if (!allVariants.isEmpty()) {
+            variantRepository.deleteAll(allVariants);
+        }
+        if (!types.isEmpty()) {
+            typeRepository.deleteAll(types);
+        }
         categoryRepository.deleteById(id);
 
-        return "Category deleted successfully! "
-                + numberOfProducts + " products removed completely";
+        return "Category " + category.getName() + " deleted successfully! "
+                + affectedProducts.size() + " products marked as unavailable.";
     }
+
 
     private CatalogueResponseDto toCatalogueResponseDto(Category category) {
         return new CatalogueResponseDto(

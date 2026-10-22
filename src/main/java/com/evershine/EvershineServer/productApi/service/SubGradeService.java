@@ -9,6 +9,8 @@ import com.evershine.EvershineServer.productApi.entity.SubGrade;
 import com.evershine.EvershineServer.productApi.repository.ProductRepository;
 import com.evershine.EvershineServer.productApi.repository.SubGradeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,12 @@ public class SubGradeService {
     private final ProductRepository productRepository;
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "filters", allEntries = true)
+            }
+    )
     public FilterResponseDto addSubGrade(String name){
         if(subGradeRepository.existsByName(name)){
             throw new DuplicateFilterException("sub-Grade name already exist with name: "+name);
@@ -62,6 +70,13 @@ public class SubGradeService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "filters", allEntries = true),
+                    @CacheEvict(value = "productList", allEntries = true)
+            }
+    )
     public String deleteSubGrade(UUID id){
         SubGrade subGrade = subGradeRepository.findById(id)
                 .orElseThrow(()->
@@ -80,6 +95,12 @@ public class SubGradeService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "filters", allEntries = true)
+            }
+    )
     public FilterResponseDto updateSubGrade(String name, UUID id){
         SubGrade subGrade = subGradeRepository.findById(id)
                 .orElseThrow(()->

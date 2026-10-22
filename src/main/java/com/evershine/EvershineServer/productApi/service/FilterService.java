@@ -8,6 +8,7 @@ import com.evershine.EvershineServer.productApi.dto.CategoryVariantDto;
 import com.evershine.EvershineServer.productApi.entity.*;
 import com.evershine.EvershineServer.productApi.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,7 @@ public class FilterService {
     private final SubGradeRepository subGradeRepository;
 
     @Transactional(readOnly = true)
+    @Cacheable("filters")
     public AllAvailableFilterDto getAllAvailableFilters(){
         List<CategoryDto> parentCategory = getFullCategoryTree();
 

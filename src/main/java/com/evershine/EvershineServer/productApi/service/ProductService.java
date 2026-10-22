@@ -6,6 +6,9 @@ import com.evershine.EvershineServer.productApi.dto.*;
 import com.evershine.EvershineServer.productApi.entity.Product;
 import com.evershine.EvershineServer.productApi.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +23,12 @@ public class ProductService {
     private final FilterService filterService;
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "productList", allEntries = true)
+            }
+    )
     public ProductLightResponseDto addProduct(ProductRequestDto productRequestDto){
         if(productRepository.existsBySlug(productRequestDto.getSlug()))
             throw new DuplicateFilterException("Slug already exist with name: "+productRequestDto.getSlug());
@@ -49,6 +58,12 @@ public class ProductService {
     // while update don`t send category, type or variant id
     // since all of them gone ignore, because no one can update their parents
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "productList", allEntries = true)
+            }
+    )
     public ProductLightResponseDto updateProductById(UUID id, ProductRequestDto dto){
 
         Product oldProduct = productRepository.findById(id)
@@ -98,6 +113,7 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "productList")
     public List<ProductMetaDataDto> getAllActiveProducts(){
         List<Product> productList = productRepository.findByProductStatus(ProductStatus.ACTIVE);
         return productList.stream()
@@ -106,6 +122,12 @@ public class ProductService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "productList", allEntries = true)
+            }
+    )
     public ProductLightResponseDto setProductStatus(UUID id,String status){
         Product product = productRepository.findById(id)
                 .orElseThrow(()->new ProductNotFoundException("Product does not exists with id: "+id));
@@ -119,11 +141,24 @@ public class ProductService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "productList", allEntries = true)
+            }
+    )
     public void deleteProductById(UUID id){
-        if(productRepository.existsById(id))
-            productRepository.deleteById(id);
-        else
-            throw new ProductNotFoundException("Product does not exists with id: "+id);
+//        if(productRepository.existsById(id)) {
+////            productRepository.deleteById(id);
+////            avoid hard delete and choose soft one
+//
+//        }
+//        else
+//            throw new ProductNotFoundException(Product does not exists with id: +id);
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(()-> new ProductNotFoundException("Product does not exists with id: "+id));
+        product.setProductStatus(ProductStatus.UNAVAILABLE);
     }
 
     private ProductMetaDataDto toProductMetaDtaDto(Product p) {

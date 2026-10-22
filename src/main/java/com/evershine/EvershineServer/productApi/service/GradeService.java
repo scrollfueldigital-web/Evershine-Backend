@@ -9,6 +9,8 @@ import com.evershine.EvershineServer.productApi.entity.Product;
 import com.evershine.EvershineServer.productApi.repository.GradeRepository;
 import com.evershine.EvershineServer.productApi.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,12 @@ public class GradeService {
     private final ProductRepository productRepository;
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "filters", allEntries = true)
+            }
+    )
     public FilterResponseDto addGrade(String name){
         if(gradeRepository.existsByName(name)){
             throw new DuplicateFilterException("Grade name already exist with name: "+name);
@@ -62,6 +70,13 @@ public class GradeService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "filters", allEntries = true),
+                    @CacheEvict(value = "productList", allEntries = true)
+            }
+    )
     public String deleteGrade(UUID id){
         Grade grade = gradeRepository.findById(id)
                 .orElseThrow(()->
@@ -80,6 +95,12 @@ public class GradeService {
     }
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "dashboard", allEntries = true),
+                    @CacheEvict(value = "filters", allEntries = true)
+            }
+    )
     public FilterResponseDto updateGrade(String name, UUID id){
         Grade grade = gradeRepository.findById(id)
                 .orElseThrow(()->

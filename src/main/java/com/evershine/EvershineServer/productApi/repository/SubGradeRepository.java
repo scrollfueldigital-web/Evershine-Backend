@@ -22,7 +22,7 @@ public interface SubGradeRepository extends JpaRepository<SubGrade, UUID> {
     )
     FROM SubGrade sg
     LEFT JOIN Product p ON p.subGrade.id = sg.id
-    GROUP BY sg.id, sg.name
+    GROUP BY sg.id, sg.name, sg.active
 """)
     List<ActiveFilterSummaryDTO> getSubGradeSummaries();
 }

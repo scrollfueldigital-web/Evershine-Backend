@@ -22,7 +22,7 @@ public interface GradeRepository extends JpaRepository<Grade, UUID> {
     )
     FROM Grade g
     LEFT JOIN Product p ON p.grade.id = g.id
-    GROUP BY g.id, g.name
+    GROUP BY g.id, g.name, g.active
 """)
     List<ActiveFilterSummaryDTO> getGradeSummaries();
 }
