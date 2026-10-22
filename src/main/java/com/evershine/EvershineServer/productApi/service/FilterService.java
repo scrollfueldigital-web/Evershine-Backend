@@ -68,35 +68,21 @@ public class FilterService {
         // 2. Group Types by their Category ID
         // Map<CategoryId, List<CategoryTypeDto>>
         Map<UUID, List<CategoryTypeDto>> typesByCategoryMap = allTypes.stream()
-                .map(type -> {
-                    CategoryTypeDto typeDto = new CategoryTypeDto();
-                    typeDto.setId(type.getId());
-                    typeDto.setName(type.getName());
-                    typeDto.setSlug(type.getSlug());
+                .collect(Collectors.groupingBy(
+                        type -> type.getCategory().getId(),
+                        Collectors.mapping(type -> {
+                            CategoryTypeDto typeDto = new CategoryTypeDto();
+                            typeDto.setId(type.getId());
+                            typeDto.setName(type.getName());
+                            typeDto.setSlug(type.getSlug());
+                            List<CategoryVariant> variantsForThisType = variantsByTypeMap.getOrDefault(type.getId(), Collections.emptyList());
+                            typeDto.setVariants(variantsForThisType.stream()
+                                    .map(v -> new CategoryVariantDto(v.getId(), v.getName(), v.getSlug()))
+                                    .toList());
+                            return typeDto;
+                        }, Collectors.toList())
+                ));
 
-                    // Attach the pre-grouped variants (convert to DTOs first)
-                    List<CategoryVariant> variantsForThisType = variantsByTypeMap.getOrDefault(type.getId(), Collections.emptyList());
-                    List<CategoryVariantDto> variantDtos = variantsForThisType.stream()
-                            .map(v -> {
-                                CategoryVariantDto vDto = new CategoryVariantDto();
-                                vDto.setId(v.getId());
-                                vDto.setName(v.getName());
-                                vDto.setSlug(v.getSlug());
-                                return vDto;
-                            }).collect(Collectors.toList());
-
-                    typeDto.setVariants(variantDtos);
-                    return typeDto;
-                })
-                .collect(Collectors.groupingBy(typeDto -> {
-                    // We need the original Category ID to group by.
-                    // Assuming CategoryType entity has a getCategory() method
-                    return allTypes.stream()
-                            .filter(t -> t.getId().equals(typeDto.getId()))
-                            .findFirst()
-                            .get()
-                            .getCategory().getId();
-                }));
 
         // 3. Build the final Category DTOs
         return allCategories.stream().map(category -> {

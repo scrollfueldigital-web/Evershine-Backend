@@ -8,6 +8,7 @@ import com.evershine.EvershineServer.CartApi.entity.AppUser;
 import com.evershine.EvershineServer.CartApi.entity.Cart;
 import com.evershine.EvershineServer.CartApi.repository.AppUserRepository;
 import com.evershine.EvershineServer.CartApi.repository.CartRepository;
+import com.evershine.EvershineServer.productApi.dto.ProductStatus;
 import com.evershine.EvershineServer.productApi.entity.Product;
 import com.evershine.EvershineServer.productApi.repository.ProductRepository;
 import com.evershine.EvershineServer.projectExceptionHandler.CartQuantityException;
@@ -39,7 +40,7 @@ public class CartService {
         List<Cart> cartList = cartRepository.findCartWithProducts(cartDto.getAppUserId());
 
         if (cartDto.getQuantity() != null && cartDto.getQuantity() <= 0) {
-            throw new RuntimeException("Quantity cannot be zero!");
+            throw new CartQuantityException("Quantity cannot be zero!");
         }
 
         // if attribute exist then increment quantity
@@ -48,7 +49,8 @@ public class CartService {
                     && cartDto.getProductSlug().equals(c.getProduct().getSlug())
                     && isMatchedAttribute(c.getCartAttributes(), cartDto.getSelectedCartAttributes())
             ) {
-                c.setQuantity(c.getQuantity() + cartDto.getQuantity());
+                if(cartDto.getQuantity()!=null)
+                    c.setQuantity(c.getQuantity() + cartDto.getQuantity());
 //                cartRepository.save(c); dirty check will manage
                 return toCartResponse(c);
             }
@@ -63,6 +65,9 @@ public class CartService {
         Product product = productRepository.findWithSlug(cartDto.getProductSlug())
                 .orElseThrow(() -> new ProductNotFoundException("Product does not exist with slug: " + cartDto.getProductSlug()));
 
+        if(product.getProductStatus() != null && product.getProductStatus() == ProductStatus.UNAVAILABLE){
+            throw new ProductNotFoundException("Product is not available at this moment with slug: "+product.getSlug());
+        }
         //create cart
         Cart cart = toCart(cartDto, product, user);
         return toCartResponse(cartRepository.save(cart));
@@ -80,6 +85,7 @@ public class CartService {
 
     @Transactional
     public CartResponseDto updateCartById(UUID cartId, CartUpdateRequestDto cartRequestDto) {
+//        old quantity will come
         if (cartRequestDto.getQuantity() != null && cartRequestDto.getQuantity() <= 0) {
             throw new CartQuantityException("Quantity must be greater than zero!");
         }

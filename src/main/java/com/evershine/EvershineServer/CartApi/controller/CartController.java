@@ -5,6 +5,7 @@ import com.evershine.EvershineServer.CartApi.dto.CartResponseDto;
 import com.evershine.EvershineServer.CartApi.dto.CartUpdateRequestDto;
 import com.evershine.EvershineServer.CartApi.service.CartService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,7 @@ public class CartController {
     private final CartService cartService;
 
     @PostMapping
-    public ResponseEntity<CartResponseDto> addToCart(@RequestBody CartRequestDto dto){
+    public ResponseEntity<CartResponseDto> addToCart(@RequestBody @Valid CartRequestDto dto){
         return ResponseEntity.ok(cartService.addToCart(dto));
     }
 
@@ -31,7 +32,7 @@ public class CartController {
 
     @Operation(summary = "Update cart with cart id, only can update quantity and attributes")
     @PutMapping("/{id}")
-    public ResponseEntity<CartResponseDto> updateCartWithId(@PathVariable UUID id, @RequestBody CartUpdateRequestDto dto){
+    public ResponseEntity<CartResponseDto> updateCartWithId(@PathVariable UUID id, @RequestBody @Valid CartUpdateRequestDto dto){
         return ResponseEntity.ok(cartService.updateCartById(id,dto));
     }
 
