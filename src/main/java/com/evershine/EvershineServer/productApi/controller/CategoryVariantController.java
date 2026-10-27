@@ -16,6 +16,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -97,6 +98,7 @@ public class CategoryVariantController {
             )
     })
     @PostMapping("/{parentId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER')")
     public ResponseEntity<CatalogueResponseDto> addCategoryVariant(
             @Valid @RequestBody CatalogueRequestDto catalogueRequestDto,
             @Parameter(
@@ -140,6 +142,7 @@ public class CategoryVariantController {
                     )
             )
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER')")
     public ResponseEntity<CatalogueResponseDto> getCategoryVariant(
             @Parameter(
                     description = "Unique UUID of the CategoryVariant",
@@ -170,6 +173,7 @@ public class CategoryVariantController {
                     )
             )
     )
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER')")
     public ResponseEntity<List<CatalogueResponseDto>> getAllCategoryVariants() {
 
         return ResponseEntity.ok(
@@ -226,6 +230,7 @@ public class CategoryVariantController {
                     )
             )
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER')")
     public ResponseEntity<CatalogueResponseDto> updateCategoryVariantById(
             @Valid @RequestBody CatalogueRequestDto catalogueRequestDto,
             @Parameter(
@@ -245,6 +250,7 @@ public class CategoryVariantController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete an existing CategoryVariant and associated products hard delete")
+    @PreAuthorize("hasRole('DEVELOPER')")
     public ResponseEntity<String> deleteById(
             @Parameter(description = "The unique UUID of the CategoryVariant", required = true)
             @PathVariable UUID id){

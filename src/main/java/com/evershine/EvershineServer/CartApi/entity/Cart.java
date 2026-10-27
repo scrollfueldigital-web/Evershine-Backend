@@ -2,6 +2,7 @@ package com.evershine.EvershineServer.CartApi.entity;
 
 import com.evershine.EvershineServer.CartApi.dto.CartAttributes;
 import com.evershine.EvershineServer.productApi.entity.Product;
+import com.evershine.EvershineServer.securityConf.entity.AppUser;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;

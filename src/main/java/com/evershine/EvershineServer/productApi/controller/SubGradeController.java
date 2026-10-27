@@ -15,6 +15,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,6 +57,7 @@ public class SubGradeController {
             )
     })
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FilterResponseDto> addSubGrade(
             @RequestParam
             @Parameter(description = "send name of SubGrade in param", required = true, schema = @Schema(maxLength = 50,minLength = 1))
@@ -80,6 +82,7 @@ public class SubGradeController {
             )
 
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FilterResponseDto> getSubGrade(
             @Parameter(description = "The unique UUID of the SubGrade", required = true)
             @PathVariable UUID id) {
@@ -92,6 +95,7 @@ public class SubGradeController {
             responseCode = "200",
             description = "List of SubGrade retrieved successfully",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = FilterResponseDto.class))))
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<FilterResponseDto>> getAllSubGrade() {
         return ResponseEntity.ok(subGradeService.getAllSubGrade());
     }
@@ -103,6 +107,7 @@ public class SubGradeController {
             description = "List of active SubGrade retrieved successfully",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = FilterResponseDto.class)))
     )
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<FilterResponseDto>> getAllActiveSubGrade() {
         return ResponseEntity.ok(subGradeService.getAllActiveSubGrades());
     }
@@ -117,6 +122,7 @@ public class SubGradeController {
             @ApiResponse(responseCode = "409", description = "Conflict: The new SubGrade name is already taken by another entity",
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FilterResponseDto> updateSubGrade(
             @Parameter(description = "The UUID of the SubGrade to change", required = true) @PathVariable UUID id,
             @RequestParam
@@ -134,6 +140,7 @@ public class SubGradeController {
             @ApiResponse(responseCode = "404", description = "Not Found: No SubGrade matching the provided ID was located",
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteSubGrade(
             @Parameter(description = "The unique UUID of the SubGrade to deactivate", required = true)
             @PathVariable UUID id) {

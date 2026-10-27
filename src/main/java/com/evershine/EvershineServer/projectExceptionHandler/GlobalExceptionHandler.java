@@ -2,18 +2,18 @@ package com.evershine.EvershineServer.projectExceptionHandler;
 
 
 import com.evershine.EvershineServer.productApi.dto.ErrorResponseDto;
-import jakarta.validation.ConstraintViolation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import org.springframework.security.access.AccessDeniedException;
 import java.time.LocalDateTime;
-import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -24,15 +24,15 @@ public class GlobalExceptionHandler {
 
         // Collects all validation error messages separated by commas
 
-        String combinedMessage = ex.getConstraintViolations()
-                .stream()
-                .map(ConstraintViolation::getMessage)
-                .collect(Collectors.joining(", "));
+//        String combinedMessage = ex.getConstraintViolations()
+//                .stream()
+//                .map(ConstraintViolation::getMessage)
+//                .collect(Collectors.joining(", "));
 
         ErrorResponseDto error = new ErrorResponseDto(
                 LocalDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
-                combinedMessage
+                ex.getMessage()
         );
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
@@ -62,28 +62,19 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponseDto> handleValidationException(MethodArgumentNotValidException ex){
+    public ResponseEntity<ErrorResponseDto> handleValidationException(MethodArgumentNotValidException ex) {
+        String cleanMessage = ex.getBindingResult().getFieldErrors().stream()
+                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .collect(java.util.stream.Collectors.joining(", "));
+
         ErrorResponseDto error = new ErrorResponseDto(
                 LocalDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
-                ex.getBindingResult().getFieldErrors().stream()
-                .map(err -> err.getField() + ": " + err.getDefaultMessage())
-                .collect(Collectors.joining(", "))
-
+                cleanMessage.isBlank() ? "Validation failed" : cleanMessage
         );
-
-        return new ResponseEntity<>(error,HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<ErrorResponseDto> handleDuplicate(ProductNotFoundException ex) {
-        ErrorResponseDto error = new ErrorResponseDto(
-                LocalDateTime.now(),
-                HttpStatus.NOT_FOUND.value(),
-                ex.getMessage()
-        );
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
-    }
 
     @ExceptionHandler(CartQuantityException.class)
     public ResponseEntity<ErrorResponseDto> handleCartQuantityException(CartQuantityException ex){
@@ -94,6 +85,19 @@ public class GlobalExceptionHandler {
         );
 
         return new ResponseEntity<>(dto,HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleUserNotFound(
+            UsernameNotFoundException ex) {
+
+        ErrorResponseDto dto = new ErrorResponseDto(
+                LocalDateTime.now(),
+                HttpStatus.NOT_FOUND.value(),
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(dto);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
@@ -118,8 +122,21 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(dto,HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(EmailException.class)
+    public ResponseEntity<ErrorResponseDto> handleEmailException(EmailException ex){
+        ErrorResponseDto dto = new ErrorResponseDto(
+                LocalDateTime.now(),
+                HttpStatus.BAD_GATEWAY.value(),
+                ex.getMessage()
+        );
+
+        return new ResponseEntity<>(dto,HttpStatus.BAD_GATEWAY);
+    }
+
     // 4. Handles Unexpected Server Faults (500 Internal Server Error)
 
+
+    // for developer
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDto> handleGlobal(Exception ex) {
         ErrorResponseDto error = new ErrorResponseDto(
@@ -129,5 +146,31 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-}
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponseDto> handleAccessDeniedException(AccessDeniedException ex){
+        ErrorResponseDto dto = new ErrorResponseDto(
+                LocalDateTime.now(),
+                HttpStatus.FORBIDDEN.value(),
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(dto,HttpStatus.FORBIDDEN);
+    }
+
+
+    // for productions
+
+//    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<ErrorResponseDto> handleGlobal(Exception ex) {
+//        // Log the full stack trace on server
+//        // log.error("Unhandled server exception: ", ex);
+//
+//        ErrorResponseDto error = new ErrorResponseDto(
+//                LocalDateTime.now(),
+//                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+//                "An unexpected error occurred. Please try again later."
+//        );
+//        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+//    }
+
+}

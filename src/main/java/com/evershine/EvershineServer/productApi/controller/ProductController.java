@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,6 +55,7 @@ public class ProductController {
             )
     })
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductLightResponseDto> addProduct(
             @Valid @RequestBody ProductRequestDto productRequestDto
             ){
@@ -70,12 +72,13 @@ public class ProductController {
             )
 
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ProductMetaDataDto>> getProductsMetaData() {
         return ResponseEntity.ok(productService.getAllMetaProducts());
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get Product by ID", description = "Fetches a single product details matching the provided UUID.")
+    @Operation(summary = "ADMIN Get Product by ID", description = "Fetches a single product details matching the provided UUID.")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
@@ -89,6 +92,7 @@ public class ProductController {
             )
 
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductLightResponseDto> getProductsById(
             @Parameter(description = "The unique UUID of the product", required = true)
             @PathVariable UUID id) {
@@ -117,12 +121,13 @@ public class ProductController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all Products", description = "Retrieves a comprehensive list of all Products (including all filters) for administration.")
+    @Operation(summary = "ADMIN Get all Products", description = "Retrieves a comprehensive list of all Products (including all filters) for administration.")
     @ApiResponse(
             responseCode = "200",
             description = "List of Products retrieved successfully",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProductLightResponseDto.class)))
     )
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ProductLightResponseDto>> getAllProducts() {
         return ResponseEntity.ok(productService.getAllProducts());
     }
@@ -139,7 +144,7 @@ public class ProductController {
     }
 
 
-    @Operation(summary = "Update an existing Product",
+    @Operation(summary = "ADMIN Update an existing Product",
             description = "Updates the targeted product's. Validates against slug duplicates before processing.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Product successfully updated",
@@ -149,12 +154,13 @@ public class ProductController {
             @ApiResponse(responseCode = "409", description = "Conflict: The new Product slug is already taken by another entity",
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/update/{id}")
     public ResponseEntity<ProductLightResponseDto> updateProduct(@PathVariable UUID id, @RequestBody @Valid ProductRequestDto productRequestDto){
         return ResponseEntity.ok(productService.updateProductById(id, productRequestDto));
     }
 
-    @Operation(summary = "Update an existing Product, send status in path variable if want to activate it, to make it unavailable can send unavailable to keep empty its optional",
+    @Operation(summary = "\"ADMIN\" Update an existing Product, send status in path variable if want to activate it, to make it unavailable can send unavailable to keep empty its optional",
             description = "Updates the targeted product's status, it can be ACTIVE/UNAVAILABLE.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Product successfully updated",
@@ -164,12 +170,13 @@ public class ProductController {
             @ApiResponse(responseCode = "500", description = "Internal server error",
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/update/{id}/status/{status}")
     public ResponseEntity<ProductLightResponseDto> updateProductStatus(@PathVariable UUID id, @PathVariable(required = false) String status){
         return ResponseEntity.ok(productService.setProductStatus(id,status));
     }
 
-    @Operation(summary = "Delete completely an existing Product",
+    @Operation(summary = "\"ADMIN\" Delete completely an existing Product",
             description = "delete the targeted product's.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Product successfully deleted",
@@ -179,6 +186,8 @@ public class ProductController {
             @ApiResponse(responseCode = "409", description = "Conflict: The new Product slug is already taken by another entity",
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
+
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteProduct(@PathVariable UUID id){
         productService.deleteProductById(id);

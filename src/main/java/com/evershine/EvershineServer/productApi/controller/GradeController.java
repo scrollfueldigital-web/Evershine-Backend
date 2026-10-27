@@ -15,6 +15,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +26,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/grades")
 @RequiredArgsConstructor
-@Tag(name = "Grade service", description = """
+@Tag(name = "Grade service, ADMIN ONLY", description = """
         Note: Grade name is Unique, duplicate is not allowed
         Admin:
         Can add, soft delete brand, soft delete will soft delete associated Grade products,
@@ -58,6 +59,7 @@ public class GradeController {
             )
     })
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FilterResponseDto> addGrade(
             @RequestParam
             @Parameter(description = "send name of grade in param", required = true, schema = @Schema(maxLength = 50,minLength = 1))
@@ -81,6 +83,7 @@ public class GradeController {
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
             )
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FilterResponseDto> getGrade(
             @Parameter(description = "The unique UUID of the Grade", required = true)
             @PathVariable UUID id) {
@@ -93,6 +96,7 @@ public class GradeController {
             responseCode = "200",
             description = "List of grade retrieved successfully",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = FilterResponseDto.class))))
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<FilterResponseDto>> getAllGrades() {
         return ResponseEntity.ok(gradeService.getAllGrade());
     }
@@ -104,6 +108,7 @@ public class GradeController {
             description = "List of active grade retrieved successfully",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = FilterResponseDto.class)))
     )
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<FilterResponseDto>> getAllActiveGrades() {
         return ResponseEntity.ok(gradeService.getAllActiveGrades());
     }
@@ -118,6 +123,7 @@ public class GradeController {
             @ApiResponse(responseCode = "409", description = "Conflict: The new Grade name is already taken by another entity",
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FilterResponseDto> updateBrand(
             @Parameter(description = "The UUID of the Grade to change", required = true) @PathVariable UUID id,
             @RequestParam
@@ -135,6 +141,7 @@ public class GradeController {
             @ApiResponse(responseCode = "404", description = "Not Found: No grade matching the provided ID was located",
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteBrand(
             @Parameter(description = "The unique UUID of the grade to deactivate", required = true)
             @PathVariable UUID id) {

@@ -15,6 +15,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,7 +25,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/brands")
 @RequiredArgsConstructor
-@Tag(name = "Brand service", description = """
+@Tag(name = "Brand service, ALL APIS ARE ADMIN ONLY", description = """
         Note: Brand name is Unique, duplicate is not allowed
         Admin:
         Can add, soft delete brand, soft delete will soft delete associated brands products,
@@ -55,6 +56,7 @@ public class BrandController {
             )
     })
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FilterResponseDto> addBrand(
             @RequestParam
             @Parameter(description = "send name of brand in param",
@@ -80,6 +82,7 @@ public class BrandController {
             )
 
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FilterResponseDto> getBrand(
             @Parameter(description = "The unique UUID of the brand", required = true)
             @PathVariable UUID id) {
@@ -92,6 +95,7 @@ public class BrandController {
             responseCode = "200",
             description = "List of brands retrieved successfully",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = FilterResponseDto.class))))
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<FilterResponseDto>> getAllBrands() {
         return ResponseEntity.ok(brandService.getAllBrands());
     }
@@ -103,6 +107,7 @@ public class BrandController {
             description = "List of active brands retrieved successfully",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = FilterResponseDto.class)))
     )
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<FilterResponseDto>> getAllActiveBrands() {
         return ResponseEntity.ok(brandService.getAllActiveBrands());
     }
@@ -117,6 +122,7 @@ public class BrandController {
             @ApiResponse(responseCode = "409", description = "Conflict: The new brand name is already taken by another entity",
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FilterResponseDto> updateBrand(
             @Parameter(description = "The UUID of the brand to change", required = true) @PathVariable UUID id,
             @RequestParam
@@ -134,6 +140,7 @@ public class BrandController {
             @ApiResponse(responseCode = "404", description = "Not Found: No brand matching the provided ID was located",
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteBrand(
             @Parameter(description = "The unique UUID of the brand to deactivate", required = true)
             @PathVariable UUID id) {

@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,8 +27,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminController {
     private final AdminService adminService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    @Operation(summary = "Get single admin response", description = "Retrieves dashboard data for administration.")
+    @Operation(summary = "\"ADMIN\" Get single admin response", description = "Retrieves dashboard data for administration.")
     @ApiResponse(
             responseCode = "200",
             description = "Dashboard retrieved successfully",

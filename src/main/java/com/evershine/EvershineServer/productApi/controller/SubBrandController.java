@@ -15,6 +15,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +26,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/sub-brands")
 @RequiredArgsConstructor
-@Tag(name = "Sub-Brand service", description = """
+@Tag(name = "Sub-Brand service, ADMIN ONLY", description = """
         Note: Sub-Brand name is Unique, duplicate is not allowed
         Admin:
         Can add, soft delete sub-brand, soft delete will soft delete associated sub-brands related products,
@@ -56,6 +57,7 @@ public class SubBrandController {
             )
     })
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FilterResponseDto> addBrand(
             @RequestParam @Parameter(description = "send name of sub-brand in param", required = true, schema = @Schema(maxLength = 50,minLength = 1))
             @Size(max = 50, message = "SubBrand name cannot exceed 50 characters")
@@ -78,6 +80,7 @@ public class SubBrandController {
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))
             )
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FilterResponseDto> getBrand(
             @Parameter(description = "The unique UUID of the sub-brand", required = true)
             @PathVariable UUID id) {
@@ -90,6 +93,7 @@ public class SubBrandController {
             responseCode = "200",
             description = "List of sub-brands retrieved successfully",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = FilterResponseDto.class))))
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<FilterResponseDto>> getAllBrands() {
         return ResponseEntity.ok(subBrandService.getAllSubBrands());
     }
@@ -101,6 +105,7 @@ public class SubBrandController {
             description = "List of active sub-brands retrieved successfully",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = FilterResponseDto.class)))
     )
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<FilterResponseDto>> getAllActiveBrands() {
         return ResponseEntity.ok(subBrandService.getAllActiveSubBrands());
     }
@@ -115,6 +120,7 @@ public class SubBrandController {
             @ApiResponse(responseCode = "409", description = "Conflict: The new sub-brand name is already taken by another entity",
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FilterResponseDto> updateBrand(
             @Parameter(description = "The UUID of the sub-brand to change", required = true) @PathVariable UUID id,
             @RequestParam
@@ -132,6 +138,7 @@ public class SubBrandController {
             @ApiResponse(responseCode = "404", description = "Not Found: No sub-brand matching the provided ID was located",
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteBrand(
             @Parameter(description = "The unique UUID of the sub-brand to deactivate", required = true)
             @PathVariable UUID id) {

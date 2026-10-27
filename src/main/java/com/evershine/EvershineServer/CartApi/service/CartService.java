@@ -4,9 +4,7 @@ import com.evershine.EvershineServer.CartApi.dto.CartAttributes;
 import com.evershine.EvershineServer.CartApi.dto.CartRequestDto;
 import com.evershine.EvershineServer.CartApi.dto.CartResponseDto;
 import com.evershine.EvershineServer.CartApi.dto.CartUpdateRequestDto;
-import com.evershine.EvershineServer.CartApi.entity.AppUser;
 import com.evershine.EvershineServer.CartApi.entity.Cart;
-import com.evershine.EvershineServer.CartApi.repository.AppUserRepository;
 import com.evershine.EvershineServer.CartApi.repository.CartRepository;
 import com.evershine.EvershineServer.productApi.dto.ProductStatus;
 import com.evershine.EvershineServer.productApi.entity.Product;
@@ -14,6 +12,8 @@ import com.evershine.EvershineServer.productApi.repository.ProductRepository;
 import com.evershine.EvershineServer.projectExceptionHandler.CartQuantityException;
 import com.evershine.EvershineServer.projectExceptionHandler.ProductNotFoundException;
 import com.evershine.EvershineServer.projectExceptionHandler.ResourceNotFoundException;
+import com.evershine.EvershineServer.securityConf.entity.AppUser;
+import com.evershine.EvershineServer.securityConf.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,12 +32,12 @@ public class CartService {
     private final ProductRepository productRepository;
 
     @Transactional
-    public CartResponseDto addToCart(CartRequestDto cartDto) {
-        // find user first
-        AppUser user = appUserRepository.findById(cartDto.getAppUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("No user exist with id: " + cartDto.getAppUserId()));
+    public CartResponseDto addToCart(CartRequestDto cartDto, String authPrincipleUsername) {
+        // find user first also send id, in error only since it fails he will get actual username
+        AppUser user = appUserRepository.findByUsername(authPrincipleUsername)
+                .orElseThrow(() -> new ResourceNotFoundException("User Not Found!"));
 
-        List<Cart> cartList = cartRepository.findCartWithProducts(cartDto.getAppUserId());
+        List<Cart> cartList = cartRepository.findCartWithProducts(user.getId());
 
         if (cartDto.getQuantity() != null && cartDto.getQuantity() <= 0) {
             throw new CartQuantityException("Quantity cannot be zero!");
@@ -49,7 +49,7 @@ public class CartService {
                     && cartDto.getProductSlug().equals(c.getProduct().getSlug())
                     && isMatchedAttribute(c.getCartAttributes(), cartDto.getSelectedCartAttributes())
             ) {
-                if(cartDto.getQuantity()!=null)
+                if (cartDto.getQuantity() != null)
                     c.setQuantity(c.getQuantity() + cartDto.getQuantity());
 //                cartRepository.save(c); dirty check will manage
                 return toCartResponse(c);
@@ -57,7 +57,7 @@ public class CartService {
         }
 
         // check overflow
-        if (!cartList.isEmpty() && cartList.size() >= 5) {
+        if (cartList.size() >= 5) {
             throw new CartQuantityException("cartDto size overflow!");
         }
 
@@ -65,8 +65,8 @@ public class CartService {
         Product product = productRepository.findWithSlug(cartDto.getProductSlug())
                 .orElseThrow(() -> new ProductNotFoundException("Product does not exist with slug: " + cartDto.getProductSlug()));
 
-        if(product.getProductStatus() != null && product.getProductStatus() == ProductStatus.UNAVAILABLE){
-            throw new ProductNotFoundException("Product is not available at this moment with slug: "+product.getSlug());
+        if (product.getProductStatus() != null && product.getProductStatus() == ProductStatus.UNAVAILABLE) {
+            throw new ProductNotFoundException("Product is not available at this moment with slug: " + product.getSlug());
         }
         //create cart
         Cart cart = toCart(cartDto, product, user);
@@ -74,24 +74,50 @@ public class CartService {
 
     }
 
+    // Secure GET
     @Transactional(readOnly = true)
-    public List<CartResponseDto> getAllCartAssociatedToUser(UUID userId) {
-        List<Cart> cartList = cartRepository.findAllByUserIdWithProduct(userId);
+    public List<CartResponseDto> getAllCartAssociatedToUser(String username) {
+        AppUser user = appUserRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        return cartList.stream()
+        return cartRepository.findAllByUserIdWithProduct(user.getId())
+                .stream()
                 .map(this::toCartResponse)
                 .toList();
     }
 
+    // Secure DELETE
     @Transactional
-    public CartResponseDto updateCartById(UUID cartId, CartUpdateRequestDto cartRequestDto) {
+    public String deleteById(UUID cartId, String username) {
+        AppUser user = appUserRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found with id: " + cartId));
+
+        // Verify ownership
+        if (!cart.getAppUser().getId().equals(user.getId())) {
+            throw new ResourceNotFoundException("Cart item not found with id: " + cartId); // Or AccessDenied
+        }
+
+        cartRepository.delete(cart);
+        return "Cart item deleted successfully";
+    }
+
+
+    @Transactional
+    public CartResponseDto updateCartById(UUID cartId, CartUpdateRequestDto cartRequestDto, String username) {
 //        old quantity will come
         if (cartRequestDto.getQuantity() != null && cartRequestDto.getQuantity() <= 0) {
             throw new CartQuantityException("Quantity must be greater than zero!");
         }
 
+        AppUser user = appUserRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+
         // 1. Fetch user carts (already fetches products & brands eagerly)
-        List<Cart> cartList = cartRepository.findCartWithProducts(cartRequestDto.getUserId());
+        List<Cart> cartList = cartRepository.findCartWithProducts(user.getId());
 
         // 2. Identify the cart row being updated
         Cart targetCart = cartList.stream()
@@ -136,15 +162,6 @@ public class CartService {
         return toCartResponse(targetCart);
     }
 
-    @Transactional
-    public String deleteById(UUID cartId) {
-        if (!cartRepository.existsById(cartId)) {
-            throw new ResourceNotFoundException("Cart does not exist with id: " + cartId);
-        }
-        cartRepository.deleteById(cartId);
-
-        return "Cart deleted with id: " + cartId;
-    }
 
     private boolean isMatchedAttribute(List<CartAttributes> list1, List<CartAttributes> list2) {
         if (list1 == null && list2 == null) return true;
@@ -200,4 +217,23 @@ public class CartService {
         response.setId(c.getId());
         return response;
     }
+
+    // @Transactional(readOnly = true)
+    // public List<CartResponseDto> getAllCartAssociatedToUser(UUID userId) {
+    //     List<Cart> cartList = cartRepository.findAllByUserIdWithProduct(userId);
+
+    //     return cartList.stream()
+    //             .map(this::toCartResponse)
+    //             .toList();
+    // }
+
+    // @Transactional
+    // public String deleteById(UUID cartId) {
+    //     if (!cartRepository.existsById(cartId)) {
+    //         throw new ResourceNotFoundException("Cart does not exist with id: " + cartId);
+    //     }
+    //     cartRepository.deleteById(cartId);
+
+    //     return "Cart deleted with id: " + cartId;
+    // }
 }

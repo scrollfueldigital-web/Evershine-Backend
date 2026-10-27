@@ -16,6 +16,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -61,7 +62,8 @@ public class CategoryController {
             )
     })
     @PostMapping
-    public ResponseEntity<CatalogueResponseDto> addBrand(
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER')")
+    public ResponseEntity<CatalogueResponseDto> addCategory(
             @Valid @RequestBody CatalogueRequestDto catalogueRequestDto
             ){
         return ResponseEntity.ok(categoryService.addCategory(catalogueRequestDto));
@@ -82,7 +84,8 @@ public class CategoryController {
             )
 
     })
-    public ResponseEntity<CatalogueResponseDto> getBrand(
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER')")
+    public ResponseEntity<CatalogueResponseDto> getCategory(
             @Parameter(description = "The unique UUID of the Category", required = true)
             @PathVariable UUID id) {
         return ResponseEntity.ok(categoryService.getCategoryById(id));
@@ -95,7 +98,8 @@ public class CategoryController {
             description = "List of Category retrieved successfully",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = CatalogueResponseDto.class)))
     )
-    public ResponseEntity<List<CatalogueResponseDto>> getAllBrands() {
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER')")
+    public ResponseEntity<List<CatalogueResponseDto>> getAllCategory() {
         return ResponseEntity.ok(categoryService.getAllCategories());
     }
 
@@ -109,12 +113,14 @@ public class CategoryController {
             @ApiResponse(responseCode = "409", description = "Conflict: The new Category name or slug is already taken by another entity",
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
-    public ResponseEntity<CatalogueResponseDto> updateBrand(@Valid @RequestBody CatalogueRequestDto catalogueRequestDto, @PathVariable UUID id) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER')")
+    public ResponseEntity<CatalogueResponseDto> updateCategory(@Valid @RequestBody CatalogueRequestDto catalogueRequestDto, @PathVariable UUID id) {
         return ResponseEntity.ok(categoryService.updateCategoryById(id,catalogueRequestDto));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete an existing Category and associated products")
+    @PreAuthorize("hasRole('DEVELOPER')")
     public ResponseEntity<String> deleteById(
             @Parameter(description = "The unique UUID of the Category", required = true)
             @PathVariable UUID id){
