@@ -31,7 +31,7 @@ public class PasswordResetController {
             
         return ResponseEntity.ok(Map.of(
                 "message",
-                "If an account exists, reset instructions will be sent."
+                "If an account exists, reset instructions will be sent to you mail, please have a look at your SPAM folder."
         ));
     }
 
