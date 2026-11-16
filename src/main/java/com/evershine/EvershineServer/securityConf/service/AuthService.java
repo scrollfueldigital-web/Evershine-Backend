@@ -5,7 +5,6 @@ import com.evershine.EvershineServer.securityConf.dto.LoginRequestDto;
 import com.evershine.EvershineServer.securityConf.dto.RegisterRequestDto;
 import com.evershine.EvershineServer.securityConf.dto.RegisterResponseDto;
 import com.evershine.EvershineServer.securityConf.entity.AppUser;
-import com.evershine.EvershineServer.securityConf.entity.Role;
 import com.evershine.EvershineServer.securityConf.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -64,7 +63,12 @@ public class AuthService {
 
             String token = jwtService.generateToken(user);
 
-            return new AuthResponse(token, user.getUsername());
+            String role = user.getAuthorities()
+                    .iterator()
+                    .next()
+                    .getAuthority();
+
+            return new AuthResponse(token, user.getUsername(), role);
 
         } catch (AuthenticationException ex) {
             throw new ResponseStatusException(
