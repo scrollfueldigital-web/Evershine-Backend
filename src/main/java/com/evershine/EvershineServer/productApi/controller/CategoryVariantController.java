@@ -250,7 +250,7 @@ public class CategoryVariantController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete an existing CategoryVariant and associated products hard delete")
-    @PreAuthorize("hasRole('DEVELOPER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER')")
     public ResponseEntity<String> deleteById(
             @Parameter(description = "The unique UUID of the CategoryVariant", required = true)
             @PathVariable UUID id){
