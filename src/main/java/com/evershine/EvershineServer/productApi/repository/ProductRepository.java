@@ -69,6 +69,15 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 """)
     List<Product> findByProductStatus(ProductStatus status);
 
+    @EntityGraph(attributePaths = {
+            "category",
+            "categoryType",
+            "categoryVariant",
+            "brand",
+            "subBrand",
+            "grade",
+            "subGrade"
+    })
     Optional<Product> findBySlug(String slug);
 
     boolean existsBySlug(String slug);

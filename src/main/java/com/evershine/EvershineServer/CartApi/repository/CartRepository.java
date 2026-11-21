@@ -23,4 +23,5 @@ public interface CartRepository extends JpaRepository<Cart, UUID> {
             "LEFT JOIN FETCH p.brand b " +
             "WHERE c.appUser.id = :userId")
     List<Cart> findAllByUserIdWithProduct(@Param("userId") UUID userId);
+    int deleteByAppUser_Username(String username);
 }
